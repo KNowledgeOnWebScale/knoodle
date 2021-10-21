@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Knoodle</title>
+
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/jsonld/1.0.0/jsonld.min.js"></script>
+  <script src="./bundle.js"></script>
+</head>
+<body>
+
+</body>
+<script type="application/javascript">
+  main();
+
+  async function main() {
+    const myHeaders = new Headers();
+    myHeaders.append('Accept', 'text/turtle');
+    const myInit = {
+      method: 'GET',
+      headers: myHeaders,
+      mode: 'cors',
+      cache: 'default'
+    };
+    let myRequest = new Request('http://localhost:3000/availability');
+    const response = await fetch(myRequest, myInit);
+    const turtle = await response.text();
+    //console.log(turtle);
+    const parser = new N3.Parser({ format: 'text/turtle' });
+    const quads = [];
+    parser.parse(turtle, (error, quad, prefixes) => {
+      if (quad) {
+        quads.push(quad);
+      } else {
+        const writer = new N3.Writer({ format: 'application/n-quads' });
+        writer.addQuads(quads);
+        writer.end(async (error, result) => {
+          console.log(result);
+          let doc = await jsonld.fromRDF(result, {format: 'application/n-quads'});
+
+          const frame = {
+            "@context": {"@vocab": "http://schema.org/"},
+            "@type": "Event"
+          };
+          doc = await jsonld.frame(doc, frame)
+          console.log(doc);
+        });
+      }
+    });
+
+  }
+</script>
+</html>
