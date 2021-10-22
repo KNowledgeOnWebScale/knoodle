@@ -6,9 +6,12 @@
 
   <script src="https://cdnjs.cloudflare.com/ajax/libs/jsonld/1.0.0/jsonld.min.js"></script>
   <script src="./bundle.js"></script>
+  <script src="./intersection.js"></script>
 </head>
 <body>
+  <div id="slots">
 
+  </div>
 </body>
 <script type="application/javascript">
   main();
@@ -35,7 +38,7 @@
         const writer = new N3.Writer({ format: 'application/n-quads' });
         writer.addQuads(quads);
         writer.end(async (error, result) => {
-          console.log(result);
+          //console.log(result);
           let doc = await jsonld.fromRDF(result, {format: 'application/n-quads'});
 
           const frame = {
@@ -43,7 +46,32 @@
             "@type": "Event"
           };
           doc = await jsonld.frame(doc, frame)
-          console.log(doc);
+          //console.log(doc['@graph']);
+
+          const dummyEvents = [{
+            "@id": 'dummy',
+            "endDate": "2021-10-22T10:00:00.000Z",
+            "startDate": "2021-10-22T09:00:00.000Z"
+          },{
+            "@id": 'dummy2',
+            "endDate": "2021-10-22T14:00:00.000Z",
+            "startDate": "2021-10-22T13:00:00.000Z"
+          }];
+          const dummyEvents2 = [{
+            "@id": 'dummy2',
+            "endDate": "2021-10-22T14:00:00.000Z",
+            "startDate": "2021-10-22T13:00:00.000Z"
+          }];
+          const slots = intersect(doc['@graph'], dummyEvents, dummyEvents2);
+
+          const $ul = document.createElement('ul');
+
+          slots.forEach(slot => {
+            const $li = document.createElement('li');
+            $li.innerText = `${slot.startDate} - ${slot.endDate}`;
+            $ul.appendChild($li);
+          });
+          document.getElementById('slots').appendChild($ul);
         });
       }
     });
