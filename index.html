@@ -26,10 +26,7 @@
 </body>
 <script type="application/javascript">
   const participants = {
-    'https://pieterheyvaert.com/#me': {
-      name: 'Pieter Heyvaert',
-      calendar: 'http://localhost:3000/availability'
-    },
+    'https://pieterheyvaert.com/#me': {},
     'dummy1': {
       name: 'Dummy 1',
       calendar: 'test:dummy1'
@@ -43,15 +40,54 @@
   document.getElementById('btn').addEventListener('click', () => {
     const urls = getSelectedParticipantUrls();
     console.log(urls);
-    main(urls);
+    findSlots(urls);
   });
 
-  populateParticipants();
+  main();
 
-  async function main(urls) {
+  async function main() {
+    await fetchWebIDs();
+    populateParticipants();
+  }
+
+  async function fetchWebIDs() {
+    const webids = Object.keys(participants);
+    const frame = {
+      "@context": {
+        "@vocab": "http://xmlns.com/foaf/0.1/",
+        "knows": "https://data.knows.idlab.ugent.be/person/office/#",
+        "schema": "http://schema.org/"
+      },
+      "@type": "Person"
+    };
+
+    for (let i = 0; i < webids.length; i++) {
+      const id = webids[i];
+
+      if (id.startsWith('http')) {
+        console.log(id);
+        const result = await getRDFasJson(id, frame);
+        console.log(result);
+        participants[id] = {
+          name: result[0].name['@value'],
+          calendar: result[0]['knows:hasAvailabilityCalendar']['schema:url']
+        };
+      }
+    }
+
+    console.log(participants);
+  }
+
+  async function findSlots(urls) {
     const calendars = [];
+
+    const frame = {
+      "@context": {"@vocab": "http://schema.org/"},
+      "@type": "Event"
+    };
+
     for (let i = 0; i < urls.length; i++) {
-      const data = await getAvailabilitySlotsInJson(urls[i]);
+      const data = await getRDFasJson(urls[i], frame);
       calendars.push(data);
     }
     const slots = intersect(...calendars);
@@ -65,8 +101,6 @@
     });
     document.getElementById('slots').innerHTML = '';
     document.getElementById('slots').appendChild($ul);
-
-    populateParticipants();
   }
 
   function populateParticipants() {
@@ -127,9 +161,9 @@
       }]
   }
 
-  function getAvailabilitySlotsInJson(calendarUrl) {
-    if (calendarUrl.startsWith('test:')) {
-      return dummyData[calendarUrl];
+  function getRDFasJson(url, frame) {
+    if (url.startsWith('test:')) {
+      return dummyData[url];
     }
 
     return new Promise(async resolve => {
@@ -141,7 +175,7 @@
         mode: 'cors',
         cache: 'default'
       };
-      let myRequest = new Request(calendarUrl);
+      let myRequest = new Request(url);
       const response = await fetch(myRequest, myInit);
       const turtle = await response.text();
       //console.log(turtle);
@@ -154,13 +188,8 @@
           const writer = new N3.Writer({format: 'application/n-quads'});
           writer.addQuads(quads);
           writer.end(async (error, result) => {
-            //console.log(result);
+            console.log(result);
             let doc = await jsonld.fromRDF(result, {format: 'application/n-quads'});
-
-            const frame = {
-              "@context": {"@vocab": "http://schema.org/"},
-              "@type": "Event"
-            };
             doc = await jsonld.frame(doc, frame)
             resolve(doc['@graph']);
           });
