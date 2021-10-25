@@ -1,0 +1,50 @@
+body {
+    margin: 30px;
+    font-family: Helvetica, sans-serif;
+}
+
+#find-slots {
+    padding-top: 20px;
+    padding-bottom: 20px;
+}
+
+button {
+    font-size: 20px;
+}
+
+#error {
+    color: red;
+}
+
+.lds-dual-ring {
+    padding-top: 20px;
+    display: inline-block;
+    width: 80px;
+    height: 80px;
+}
+
+.lds-dual-ring:after {
+    content: " ";
+    display: block;
+    width: 64px;
+    height: 64px;
+    margin: 8px;
+    border-radius: 50%;
+    border: 6px solid #0EAD69;
+    border-color: #0EAD69 transparent #0EAD69 transparent;
+    animation: lds-dual-ring 1.2s linear infinite;
+}
+
+@keyframes lds-dual-ring {
+    0% {
+        transform: rotate(0deg);
+    }
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+.hidden {
+    visibility: hidden;
+    display: none;
+}

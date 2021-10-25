@@ -13,10 +13,22 @@ window.onload = async () => {
     }
   };
 
-  document.getElementById('btn').addEventListener('click', () => {
+  document.getElementById('btn').addEventListener('click', async () => {
+    document.getElementById('error').classList.add('hidden');
+    document.getElementById('available-slots').classList.add('hidden');
+    document.getElementById('loader').classList.remove('hidden');
     const urls = getSelectedParticipantUrls();
     console.log(urls);
-    findSlots(urls);
+
+    if (urls.length < 2) {
+      const $error = document.getElementById('error');
+      $error.innerText = 'Please select at least 2 participants.';
+      $error.classList.remove('hidden');
+      document.getElementById('loader').classList.add('hidden');
+    } else {
+      const slots = await findSlots(urls);
+      showSlots(slots);
+    }
   });
 
   await fetchWebIDs();
@@ -81,17 +93,37 @@ window.onload = async () => {
       calendars.push(data);
     }
 
-    const slots = intersect(...calendars);
-    const $ul = document.createElement('ul');
+    return intersect(...calendars);
+  }
+
+  function showSlots(slots) {
+    const $tbody = document.querySelector('#slots tbody');
+    $tbody.innerHTML = '';
 
     slots.forEach(slot => {
-      const $li = document.createElement('li');
-      $li.innerText = `${dayjs(slot.startDate).format('dddd YYYY-MM-DD HH:mm')} - ${dayjs(slot.endDate).format('dddd YYYY-MM-DD HH:mm')}`;
-      $ul.appendChild($li);
+      const $tr = document.createElement('tr');
+      const $from = document.createElement('td');
+      const startDate = dayjs(slot.startDate);
+      $from.innerText = startDate.format('dddd YYYY-MM-DD HH:mm');
+      $tr.appendChild($from);
+
+      const $till = document.createElement('td');
+
+      const endDate = dayjs(slot.endDate);
+
+      $till.innerText = ' till ';
+      if (endDate.isSame(startDate, 'day')) {
+        $till.innerText += dayjs(slot.endDate).format('HH:mm');
+      } else {
+        $till.innerText += dayjs(slot.endDate).format('dddd YYYY-MM-DD HH:mm');
+      }
+      $tr.appendChild($till);
+
+      $tbody.appendChild($tr);
     });
 
-    document.getElementById('slots').innerHTML = '';
-    document.getElementById('slots').appendChild($ul);
+    document.getElementById('available-slots').classList.remove('hidden');
+    document.getElementById('loader').classList.add('hidden');
   }
 
   function populateParticipants() {

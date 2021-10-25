@@ -4,6 +4,8 @@
     <meta charset="UTF-8">
     <title>Knoodle</title>
 
+    <link href="./style.css" rel="stylesheet">
+
     <script src="https://cdnjs.cloudflare.com/ajax/libs/jsonld/1.0.0/jsonld.min.js"></script>
     <script src="https://unpkg.com/dayjs@1.8.21/dayjs.min.js"></script>
     <script src="./n3.js"></script>
@@ -11,18 +13,38 @@
     <script src="./index.js"></script>
 </head>
 <body>
+<div id="header">
+    <h1>KNoodle</h1>
+</div>
 <div id="participants">
     <h3>Select participants</h3>
     <div id="participant-list"></div>
 </div>
-<div style="padding-top: 20px; padding-bottom: 20px;">
-    <button id="btn">Find slots</button>
+<div id="error">
+
 </div>
-<div>
+<div id="find-slots">
+    <div>
+        <button id="btn">Find slots</button>
+    </div>
+    <div id="loader" class="hidden lds-dual-ring"></div>
+</div>
+<div id="available-slots" class="hidden">
     <h3>Available slots</h3>
     <div id="slots">
-    </div>
+        <table>
+            <!--            <thead>-->
+            <!--            <th>-->
+            <!--                From-->
+            <!--            </th>-->
+            <!--            <th>Till-->
+            <!--            </th>-->
+            <!--            </thead>-->
+            <tbody>
 
+            </tbody>
+        </table>
+    </div>
 </div>
 </body>
 </html>
