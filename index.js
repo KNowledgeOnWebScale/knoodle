@@ -1,8 +1,6 @@
 window.onload = async () => {
+  const employeesUrl = 'https://data.knows.idlab.ugent.be/person/office/employees.ttl';
   const participants = {
-    'https://pieterheyvaert.com/#me': {},
-    'https://data.knows.idlab.ugent.be/person/givdwiel/#me': {},
-    'https://data.knows.idlab.ugent.be/person/do-not-exist/#me': {},
     'dummy1': {
       name: 'Dummy 1',
       calendar: 'test:dummy1'
@@ -31,11 +29,34 @@ window.onload = async () => {
     }
   });
 
-  await fetchWebIDs();
+  await fetchParticipantWebIDs();
+  console.log('participants web ids fetched');
+  await fetchDataOfWebIDs();
+  console.log('data of web ids fetched');
   populateParticipants();
 
-  async function fetchWebIDs() {
+  async function fetchParticipantWebIDs() {
+    const frame = {
+      "@context": {
+        "@vocab": "http://schema.org/"
+      },
+      "employee": {}
+    };
+
+    const result = await getRDFasJson(employeesUrl, frame);
+    console.log(result);
+    const ids = result[0].employee.map(a => a['@id']);
+
+    ids.forEach(id => {
+      participants[id] = {};
+    });
+
+    console.log(participants);
+  }
+
+  async function fetchDataOfWebIDs() {
     const webids = Object.keys(participants);
+    console.log(webids);
     const frame = {
       "@context": {
         "@vocab": "http://xmlns.com/foaf/0.1/",
@@ -49,31 +70,40 @@ window.onload = async () => {
       const id = webids[i];
 
       if (id.startsWith('http')) {
-        console.log(id);
-        const result = await getRDFasJson(id, frame);
-        console.log(result);
-        let calendar = undefined;
-        let name = undefined;
+        try {
+          console.log(id);
+          const result = await getRDFasJson(id, frame);
+          console.log(result);
 
-        if (result.length === 0) {
-          participants[id].error = 'No results in JSON-LD';
-          return;
+          let calendar = undefined;
+          let name = undefined;
+
+          if (result.length === 0) {
+            participants[id].error = 'No results in JSON-LD';
+            return;
+          }
+
+          if (result[0]['knows:hasAvailabilityCalendar'] && result[0]['knows:hasAvailabilityCalendar']['schema:url']) {
+            calendar = result[0]['knows:hasAvailabilityCalendar']['schema:url'];
+          }
+
+          if (result[0].name) {
+            name = result[0].name['@value']
+          } else if (result[0].givenName) {
+            name = result[0].givenName['@value'] + ' ' + result[0].familyName['@value']
+          }
+
+          participants[id] = {
+            name,
+            calendar
+          };
+        } catch (e) {
+          if (e.includes && e.includes('conversion')) {
+            participants[id].error = e;
+          } else {
+            participants[id].error = 'Unable to fetch data.'
+          }
         }
-
-        if (result[0]['knows:hasAvailabilityCalendar'] && result[0]['knows:hasAvailabilityCalendar']['schema:url']) {
-          calendar = result[0]['knows:hasAvailabilityCalendar']['schema:url'];
-        }
-
-        if (result[0].name) {
-          name = result[0].name['@value']
-        } else if (result[0].givenName) {
-          name = result[0].givenName['@value'] + ' ' + result[0].familyName['@value']
-        }
-
-        participants[id] = {
-          name,
-          calendar
-        };
       }
     }
 
@@ -126,13 +156,37 @@ window.onload = async () => {
     document.getElementById('loader').classList.add('hidden');
   }
 
-  function populateParticipants() {
+  function sortParticipants() {
+    const temp = [];
+
     const webids = Object.keys(participants);
+    webids.forEach(id => {
+      const data = JSON.parse(JSON.stringify(participants[id]));
+      data.id = id;
+      temp.push(data);
+    });
+
+    temp.sort((a, b) => {
+      if (a.name < b.name) {
+        return -1;
+      } else if (a.name > b.name) {
+        return 1;
+      } else {
+        return 0;
+      }
+    });
+
+    return temp;
+  }
+
+  function populateParticipants() {
+    const dataArray = sortParticipants();
+    console.log(dataArray);
     const $list = document.getElementById('participant-list');
     $list.innerHTML = '';
 
-    webids.forEach(id => {
-      const data = participants[id];
+    dataArray.forEach(data => {
+      const id = data.id;
       const $div = document.createElement('div');
       const $input = document.createElement('input');
       $input.setAttribute('type', 'checkbox');
@@ -230,16 +284,20 @@ window.onload = async () => {
               if (error) {
                 reject(error);
               } else {
-                console.log(result);
-                let doc = await jsonld.fromRDF(result, {format: 'application/n-quads'});
-                doc = await jsonld.frame(doc, frame)
-                resolve(doc['@graph']);
+                // console.log(result);
+                try {
+                  let doc = await jsonld.fromRDF(result, {format: 'application/n-quads'});
+                  doc = await jsonld.frame(doc, frame)
+                  resolve(doc['@graph']);
+                } catch (err) {
+                  reject('JSON-LD conversion error');
+                }
               }
             });
           }
         });
       } catch (e) {
-        reject(err);
+        reject(e);
       }
     });
   }
