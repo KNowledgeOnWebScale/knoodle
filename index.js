@@ -31,6 +31,18 @@ window.onload = async () => {
     }
   });
 
+  document.getElementById('see-invalid-participants-btn').addEventListener('click', () => {
+    document.getElementById('invalid-participants-list').classList.remove('hidden');
+    document.getElementById('hide-invalid-participants-btn').classList.remove('hidden');
+    document.getElementById('see-invalid-participants-btn').classList.add('hidden');
+  });
+
+  document.getElementById('hide-invalid-participants-btn').addEventListener('click', () => {
+    document.getElementById('invalid-participants-list').classList.add('hidden');
+    document.getElementById('hide-invalid-participants-btn').classList.add('hidden');
+    document.getElementById('see-invalid-participants-btn').classList.remove('hidden');
+  });
+
   document.getElementById('log-in-btn').addEventListener('click', async () => {
     // Get web id
     const webId = document.getElementById('webid').value;
@@ -106,7 +118,7 @@ window.onload = async () => {
     const webids = Object.keys(participants);
 
     webids.forEach(id => {
-      if (document.getElementById(id).checked) {
+      if (document.getElementById(id)?.checked) {
         urls.push(participants[id].calendar);
       }
     });
@@ -194,6 +206,7 @@ async function loginAndFetch(oidcIssuer) {
 
     if (invalidParticipantsCount > 0) {
       document.getElementById('invalid-participants').classList.remove('hidden');
+      document.getElementById('invalid-participants-count').innerText = invalidParticipantsCount;
     }
 
     document.querySelector('#participants .loader').classList.add('hidden');
