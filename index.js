@@ -190,7 +190,11 @@ async function loginAndFetch(oidcIssuer) {
     console.log('participants web ids fetched');
     await fetchDataOfWebIDs(solidFetch);
     console.log('data of web ids fetched');
-    populateParticipants();
+    const invalidParticipantsCount = populateParticipants();
+
+    if (invalidParticipantsCount > 0) {
+      document.getElementById('invalid-participants').classList.remove('hidden');
+    }
 
     document.querySelector('#participants .loader').classList.add('hidden');
     document.getElementById('find-slots').classList.remove('hidden');
@@ -261,37 +265,46 @@ async function fetchDataOfWebIDs(fetch) {
 function populateParticipants() {
   const dataArray = sortParticipants();
   console.log(dataArray);
-  const $list = document.getElementById('participant-list');
-  $list.innerHTML = '';
+  const $validList = document.getElementById('participant-list');
+  const $invalidList = document.getElementById('invalid-participants-list');
+  $validList.innerHTML = '';
+  $invalidList.innerHTML = '';
+  let invalidParticipants = 0;
 
   dataArray.forEach(data => {
     const id = data.id;
-    const $div = document.createElement('div');
-    const $input = document.createElement('input');
-    $input.setAttribute('type', 'checkbox');
-    $input.setAttribute('id', id);
-    $input.setAttribute('name', id);
 
     if (data.error || !data.calendar) {
-      $input.setAttribute('disabled', true);
+      invalidParticipants ++;
+      const $li = document.createElement('li');
+      $li.innerText = data.name || id;
+
+      if (data.error) {
+        $li.innerText += ' (Error: ' + data.error + ')';
+      } else  {
+        $li.innerText += ' (No availability calendar found.)'
+      }
+
+      $invalidList.appendChild($li);
+    } else {
+      const $div = document.createElement('div');
+      const $input = document.createElement('input');
+      $input.setAttribute('type', 'checkbox');
+      $input.setAttribute('id', id);
+      $input.setAttribute('name', id);
+
+      $div.appendChild($input);
+
+      const $label = document.createElement('label');
+      $label.setAttribute('for', id);
+      $label.innerText = data.name || id;
+      $div.appendChild($label);
+
+      $validList.appendChild($div);
     }
-
-    $div.appendChild($input);
-
-    const $label = document.createElement('label');
-    $label.setAttribute('for', id);
-    $label.innerText = data.name || id;
-
-    if (data.error) {
-      $label.innerText += ' (Error: ' + data.error + ')';
-    } else if (!data.calendar) {
-      $label.innerText += ' (No availability calendar found.)'
-    }
-
-    $div.appendChild($label);
-
-    $list.appendChild($div);
   });
+
+  return invalidParticipants;
 }
 
 function sortParticipants() {
