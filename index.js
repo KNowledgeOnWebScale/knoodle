@@ -68,7 +68,7 @@ window.onload = async () => {
     };
 
     const result = await getRDFasJson(webId, frame, fetch);
-    const oidcIssuer = result[0]['solid:oidcIssuer']['@id'];
+    const oidcIssuer = result['solid:oidcIssuer']['@id'];
 
     // Login and fetch
     if (oidcIssuer) {
@@ -139,7 +139,7 @@ async function loginAndFetch(oidcIssuer) {
     };
 
     const result = await getRDFasJson(solidClientAuthentication.getDefaultSession().info.webId, frame, fetch);
-    const name = getPersonName(result[0]) || solidClientAuthentication.getDefaultSession().info.webId;
+    const name = getPersonName(result) || solidClientAuthentication.getDefaultSession().info.webId;
 
     document.getElementById('current-user').innerText = 'Welcome ' + name;
     document.getElementById('current-user').classList.remove('hidden');
@@ -173,7 +173,7 @@ async function fetchParticipantWebIDs(fetch) {
   };
 
   const result = await getRDFasJson(employeesUrl, frame, fetch);
-  const ids = result[0].employee.map(a => a['@id']);
+  const ids = result.employee.map(a => a['@id']);
 
   ids.forEach(id => {
     participants[id] = {};
@@ -206,12 +206,12 @@ async function fetchDataOfWebIDs(fetch) {
           return;
         }
 
-        if (result[0]['knows:hasAvailabilityCalendar'] && result[0]['knows:hasAvailabilityCalendar']['schema:url']) {
-          calendar = result[0]['knows:hasAvailabilityCalendar']['schema:url'];
+        if (result['knows:hasAvailabilityCalendar'] && result['knows:hasAvailabilityCalendar']['schema:url']) {
+          calendar = result['knows:hasAvailabilityCalendar']['schema:url'];
         }
 
         participants[id] = {
-          name: getPersonName(result[0]) || id,
+          name: getPersonName(result) || id,
           calendar
         };
       } catch (e) {
@@ -340,7 +340,7 @@ function getRDFasJson(url, frame, fetch) {
               try {
                 let doc = await jsonld.fromRDF(result, {format: 'application/n-quads'});
                 doc = await jsonld.frame(doc, frame)
-                resolve(doc['@graph']);
+                resolve(doc);
               } catch (err) {
                 reject('JSON-LD conversion error');
               }
@@ -377,7 +377,7 @@ async function findSlots(urls) {
   for (let i = 0; i < urls.length; i++) {
     try {
       const data = await getRDFasJson(urls[i], frame, solidFetch);
-      calendars.push(data);
+      calendars.push(data['@graph'] || data);
     } catch (e) {
       if (e.includes('ForbiddenHttpError')) {
         error = new Error('Forbidden to access: ' + urls[i]);
