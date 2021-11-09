@@ -26,8 +26,17 @@ window.onload = async () => {
       $error.classList.remove('hidden');
       document.querySelector('#find-slots .loader').classList.add('hidden');
     } else {
-      const slots = await findSlots(urls);
-      showSlots(slots);
+      const {slots, error} = await findSlots(urls);
+
+      if (error) {
+        const $error = document.getElementById('error');
+        const participantWebId = getParticipantViaCalendarUrl(error.url);
+        $error.innerText = `${error.message} (Calendar of ${participants[participantWebId].name} (${participantWebId}))`;
+        $error.classList.remove('hidden');
+        document.querySelector('#find-slots .loader').classList.add('hidden');
+      } else {
+        showSlots(slots);
+      }
     }
   });
 
@@ -66,87 +75,28 @@ window.onload = async () => {
       loginAndFetch(oidcIssuer);
     }
   });
-
-  async function findSlots(urls) {
-    const calendars = [];
-
-    const frame = {
-      "@context": {"@vocab": "http://schema.org/"},
-      "@type": "Event"
-    };
-
-    for (let i = 0; i < urls.length; i++) {
-      const data = await getRDFasJson(urls[i], frame, solidFetch);
-      calendars.push(data);
-    }
-
-    return intersect(...calendars);
-  }
-
-  function showSlots(slots) {
-    const $tbody = document.querySelector('#slots tbody');
-    $tbody.innerHTML = '';
-
-    slots.forEach(slot => {
-      const $tr = document.createElement('tr');
-      const $from = document.createElement('td');
-      const startDate = dayjs(slot.startDate);
-      $from.innerText = startDate.format('dddd YYYY-MM-DD HH:mm');
-      $tr.appendChild($from);
-
-      const $till = document.createElement('td');
-
-      const endDate = dayjs(slot.endDate);
-
-      $till.innerText = ' till ';
-      if (endDate.isSame(startDate, 'day')) {
-        $till.innerText += dayjs(slot.endDate).format('HH:mm');
-      } else {
-        $till.innerText += dayjs(slot.endDate).format('dddd YYYY-MM-DD HH:mm');
-      }
-      $tr.appendChild($till);
-
-      $tbody.appendChild($tr);
-    });
-
-    document.getElementById('available-slots').classList.remove('hidden');
-    document.querySelector('#find-slots .loader').classList.add('hidden');
-  }
-
-  function getSelectedParticipantUrls() {
-    const urls = [];
-    const webids = Object.keys(participants);
-
-    webids.forEach(id => {
-      if (document.getElementById(id)?.checked) {
-        urls.push(participants[id].calendar);
-      }
-    });
-
-    return urls;
-  }
 };
 
 const employeesUrl = 'https://data.knows.idlab.ugent.be/person/office/employees.ttl';
 const dummyData = {
   'test:dummy1': [{
     "@id": 'dummy',
-    "endDate": "2021-11-05T10:00:00.000Z",
-    "startDate": "2021-11-05T09:00:00.000Z"
+    "endDate": "2021-11-09T10:00:00.000Z",
+    "startDate": "2021-11-09T09:00:00.000Z"
   }, {
     "@id": 'dummy2',
-    "endDate": "2021-11-05T14:00:00.000Z",
-    "startDate": "2021-11-05T13:00:00.000Z"
+    "endDate": "2021-11-09T14:00:00.000Z",
+    "startDate": "2021-11-09T13:00:00.000Z"
   }],
   'test:dummy2': [
     {
       "@id": 'dummy',
-      "endDate": "2021-11-05T10:00:00.000Z",
-      "startDate": "2021-11-05T09:30:00.000Z"
+      "endDate": "2021-11-09T10:00:00.000Z",
+      "startDate": "2021-11-09T09:30:00.000Z"
     }, {
       "@id": 'dummy2',
-      "endDate": "2021-11-05T14:00:00.000Z",
-      "startDate": "2021-11-05T13:30:00.000Z"
+      "endDate": "2021-11-09T14:00:00.000Z",
+      "startDate": "2021-11-09T13:30:00.000Z"
     }]
 }
 
@@ -364,6 +314,12 @@ function getRDFasJson(url, frame, fetch) {
 
     try {
       const response = await fetch(url, myInit);
+
+      if (response.status !== 200) {
+        reject(await response.text());
+        return;
+      }
+
       const turtle = await response.text();
       //console.log(turtle);
       const parser = new N3.Parser({format: 'text/turtle', baseIRI: url});
@@ -393,6 +349,7 @@ function getRDFasJson(url, frame, fetch) {
         }
       });
     } catch (e) {
+      console.error(e);
       reject(e);
     }
   });
@@ -404,4 +361,97 @@ function getPersonName(person) {
   } else if (person.givenName) {
     return person.givenName['@value'] + ' ' + person.familyName['@value']
   }
+}
+
+
+async function findSlots(urls) {
+  const calendars = [];
+
+  const frame = {
+    "@context": {"@vocab": "http://schema.org/"},
+    "@type": "Event"
+  };
+
+  let error = undefined;
+
+  for (let i = 0; i < urls.length; i++) {
+    try {
+      const data = await getRDFasJson(urls[i], frame, solidFetch);
+      calendars.push(data);
+    } catch (e) {
+      if (e.includes('ForbiddenHttpError')) {
+        error = new Error('Forbidden to access: ' + urls[i]);
+        error.url = urls[i];
+      }
+
+      break;
+    }
+  }
+
+  let slots = undefined;
+
+  if (!error) {
+    slots = intersect(...calendars);
+  }
+
+
+  return {slots, error}
+}
+
+function showSlots(slots) {
+  const $tbody = document.querySelector('#slots tbody');
+  $tbody.innerHTML = '';
+
+  slots.forEach(slot => {
+    const $tr = document.createElement('tr');
+    const $from = document.createElement('td');
+    const startDate = dayjs(slot.startDate);
+    $from.innerText = startDate.format('dddd YYYY-MM-DD HH:mm');
+    $tr.appendChild($from);
+
+    const $till = document.createElement('td');
+
+    const endDate = dayjs(slot.endDate);
+
+    $till.innerText = ' till ';
+    if (endDate.isSame(startDate, 'day')) {
+      $till.innerText += dayjs(slot.endDate).format('HH:mm');
+    } else {
+      $till.innerText += dayjs(slot.endDate).format('dddd YYYY-MM-DD HH:mm');
+    }
+    $tr.appendChild($till);
+
+    $tbody.appendChild($tr);
+  });
+
+  document.getElementById('available-slots').classList.remove('hidden');
+  document.querySelector('#find-slots .loader').classList.add('hidden');
+}
+
+function getSelectedParticipantUrls() {
+  const urls = [];
+  const webids = Object.keys(participants);
+
+  webids.forEach(id => {
+    if (document.getElementById(id)?.checked) {
+      urls.push(participants[id].calendar);
+    }
+  });
+
+  return urls;
+}
+
+function getParticipantViaCalendarUrl(url) {
+  const webids = Object.keys(participants);
+  let i = 0;
+
+  while (i < webids.length && participants[webids[i]].calendar !== url) {
+    i ++;
+  }
+
+  if (i < webids.length) {
+    return webids[i];
+  }
+
+  return null;
 }
