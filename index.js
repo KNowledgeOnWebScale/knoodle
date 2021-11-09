@@ -1,20 +1,22 @@
+let solidFetch = undefined;
+const participants = {
+  'dummy1': {
+    name: 'Dummy 1',
+    calendar: 'test:dummy1'
+  },
+  'dummy2': {
+    name: 'Dummy 2',
+    calendar: 'test:dummy2'
+  }
+};
+
 window.onload = async () => {
-  const employeesUrl = 'https://data.knows.idlab.ugent.be/person/office/employees.ttl';
-  const participants = {
-    'dummy1': {
-      name: 'Dummy 1',
-      calendar: 'test:dummy1'
-    },
-    'dummy2': {
-      name: 'Dummy 2',
-      calendar: 'test:dummy2'
-    }
-  };
+  loginAndFetch();
 
   document.getElementById('btn').addEventListener('click', async () => {
     document.getElementById('error').classList.add('hidden');
     document.getElementById('available-slots').classList.add('hidden');
-    document.getElementById('loader').classList.remove('hidden');
+    document.querySelector('#find-slots .loader').classList.remove('hidden');
     const urls = getSelectedParticipantUrls();
     console.log(urls);
 
@@ -22,93 +24,36 @@ window.onload = async () => {
       const $error = document.getElementById('error');
       $error.innerText = 'Please select at least 2 participants.';
       $error.classList.remove('hidden');
-      document.getElementById('loader').classList.add('hidden');
+      document.querySelector('#find-slots .loader').classList.add('hidden');
     } else {
       const slots = await findSlots(urls);
       showSlots(slots);
     }
   });
 
-  await fetchParticipantWebIDs();
-  console.log('participants web ids fetched');
-  await fetchDataOfWebIDs();
-  console.log('data of web ids fetched');
-  populateParticipants();
+  document.getElementById('log-in-btn').addEventListener('click', async () => {
+    // Get web id
+    const webId = document.getElementById('webid').value;
 
-  async function fetchParticipantWebIDs() {
-    const frame = {
-      "@context": {
-        "@vocab": "http://schema.org/"
-      },
-      "employee": {}
-    };
-
-    const result = await getRDFasJson(employeesUrl, frame);
-    console.log(result);
-    const ids = result[0].employee.map(a => a['@id']);
-
-    ids.forEach(id => {
-      participants[id] = {};
-    });
-
-    console.log(participants);
-  }
-
-  async function fetchDataOfWebIDs() {
-    const webids = Object.keys(participants);
-    console.log(webids);
+    // Get issuer
     const frame = {
       "@context": {
         "@vocab": "http://xmlns.com/foaf/0.1/",
         "knows": "https://data.knows.idlab.ugent.be/person/office/#",
-        "schema": "http://schema.org/"
+        "schema": "http://schema.org/",
+        "solid": "http://www.w3.org/ns/solid/terms#"
       },
       "@type": "Person"
     };
 
-    for (let i = 0; i < webids.length; i++) {
-      const id = webids[i];
+    const result = await getRDFasJson(webId, frame, fetch);
+    const oidcIssuer = result[0]['solid:oidcIssuer']['@id'];
 
-      if (id.startsWith('http')) {
-        try {
-          console.log(id);
-          const result = await getRDFasJson(id, frame);
-          console.log(result);
-
-          let calendar = undefined;
-          let name = undefined;
-
-          if (result.length === 0) {
-            participants[id].error = 'No results in JSON-LD';
-            return;
-          }
-
-          if (result[0]['knows:hasAvailabilityCalendar'] && result[0]['knows:hasAvailabilityCalendar']['schema:url']) {
-            calendar = result[0]['knows:hasAvailabilityCalendar']['schema:url'];
-          }
-
-          if (result[0].name) {
-            name = result[0].name['@value']
-          } else if (result[0].givenName) {
-            name = result[0].givenName['@value'] + ' ' + result[0].familyName['@value']
-          }
-
-          participants[id] = {
-            name,
-            calendar
-          };
-        } catch (e) {
-          if (e.includes && e.includes('conversion')) {
-            participants[id].error = e;
-          } else {
-            participants[id].error = 'Unable to fetch data.'
-          }
-        }
-      }
+    // Login and fetch
+    if (oidcIssuer) {
+      loginAndFetch(oidcIssuer);
     }
-
-    console.log(participants);
-  }
+  });
 
   async function findSlots(urls) {
     const calendars = [];
@@ -119,7 +64,7 @@ window.onload = async () => {
     };
 
     for (let i = 0; i < urls.length; i++) {
-      const data = await getRDFasJson(urls[i], frame);
+      const data = await getRDFasJson(urls[i], frame, solidFetch);
       calendars.push(data);
     }
 
@@ -153,66 +98,7 @@ window.onload = async () => {
     });
 
     document.getElementById('available-slots').classList.remove('hidden');
-    document.getElementById('loader').classList.add('hidden');
-  }
-
-  function sortParticipants() {
-    const temp = [];
-
-    const webids = Object.keys(participants);
-    webids.forEach(id => {
-      const data = JSON.parse(JSON.stringify(participants[id]));
-      data.id = id;
-      temp.push(data);
-    });
-
-    temp.sort((a, b) => {
-      if (a.name < b.name) {
-        return -1;
-      } else if (a.name > b.name) {
-        return 1;
-      } else {
-        return 0;
-      }
-    });
-
-    return temp;
-  }
-
-  function populateParticipants() {
-    const dataArray = sortParticipants();
-    console.log(dataArray);
-    const $list = document.getElementById('participant-list');
-    $list.innerHTML = '';
-
-    dataArray.forEach(data => {
-      const id = data.id;
-      const $div = document.createElement('div');
-      const $input = document.createElement('input');
-      $input.setAttribute('type', 'checkbox');
-      $input.setAttribute('id', id);
-      $input.setAttribute('name', id);
-
-      if (data.error || !data.calendar) {
-        $input.setAttribute('disabled', true);
-      }
-
-      $div.appendChild($input);
-
-      const $label = document.createElement('label');
-      $label.setAttribute('for', id);
-      $label.innerText = data.name || id;
-
-      if (data.error) {
-        $label.innerText += ' (Error: ' + data.error + ')';
-      } else if (!data.calendar) {
-        $label.innerText += ' (No availability calendar found.)'
-      }
-
-      $div.appendChild($label);
-
-      $list.appendChild($div);
-    });
+    document.querySelector('#find-slots .loader').classList.add('hidden');
   }
 
   function getSelectedParticipantUrls() {
@@ -227,78 +113,269 @@ window.onload = async () => {
 
     return urls;
   }
+};
 
-  const dummyData = {
-    'test:dummy1': [{
+const employeesUrl = 'https://data.knows.idlab.ugent.be/person/office/employees.ttl';
+const dummyData = {
+  'test:dummy1': [{
+    "@id": 'dummy',
+    "endDate": "2021-11-05T10:00:00.000Z",
+    "startDate": "2021-11-05T09:00:00.000Z"
+  }, {
+    "@id": 'dummy2',
+    "endDate": "2021-11-05T14:00:00.000Z",
+    "startDate": "2021-11-05T13:00:00.000Z"
+  }],
+  'test:dummy2': [
+    {
       "@id": 'dummy',
-      "endDate": "2021-10-29T10:00:00.000Z",
-      "startDate": "2021-10-29T09:00:00.000Z"
+      "endDate": "2021-11-05T10:00:00.000Z",
+      "startDate": "2021-11-05T09:30:00.000Z"
     }, {
       "@id": 'dummy2',
-      "endDate": "2021-10-29T14:00:00.000Z",
-      "startDate": "2021-10-29T13:00:00.000Z"
-    }],
-    'test:dummy2': [
-      {
-        "@id": 'dummy',
-        "endDate": "2021-10-29T10:00:00.000Z",
-        "startDate": "2021-10-29T09:30:00.000Z"
-      }, {
-        "@id": 'dummy2',
-        "endDate": "2021-10-29T14:00:00.000Z",
-        "startDate": "2021-10-29T13:30:00.000Z"
-      }]
-  }
+      "endDate": "2021-11-05T14:00:00.000Z",
+      "startDate": "2021-11-05T13:30:00.000Z"
+    }]
+}
 
-  function getRDFasJson(url, frame) {
-    if (url.startsWith('test:')) {
-      return dummyData[url];
+async function loginAndFetch(oidcIssuer) {
+  // 1. Call the handleIncomingRedirect() function to complete the authentication process.
+  //   If the page is being loaded after the redirect from the Solid Identity Provider
+  //      (i.e., part of the authentication flow), the user's credentials are stored in-memory, and
+  //      the login process is complete. That is, a session is logged in
+  //      only after it handles the incoming redirect from the Solid Identity Provider.
+  //   If the page is not being loaded after a redirect from the Solid Identity Provider,
+  //      nothing happens.
+  await solidClientAuthentication.handleIncomingRedirect();
+
+  // 2. Start the Login Process if not already logged in.
+  if (!solidClientAuthentication.getDefaultSession().info.isLoggedIn) {
+    if (oidcIssuer) {
+      document.getElementById('current-user').classList.add('hidden');
+      document.getElementById('webid-form').classList.remove('hidden');
+      // The `login()` redirects the user to their identity provider;
+      // i.e., moves the user away from the current page.
+      await solidClientAuthentication.login({
+        // Specify the URL of the user's Solid Identity Provider; e.g., "https://broker.pod.inrupt.com" or "https://inrupt.net"
+        oidcIssuer,
+        // Specify the URL the Solid Identity Provider should redirect to after the user logs in,
+        // e.g., the current page for a single-page app.
+        redirectUrl: window.location.href,
+        // Pick an application name that will be shown when asked
+        // to approve the application's access to the requested data.
+        clientName: "KNoodle"
+      });
+    }
+  } else {
+    const frame = {
+      "@context": {
+        "@vocab": "http://xmlns.com/foaf/0.1/",
+        "knows": "https://data.knows.idlab.ugent.be/person/office/#",
+        "schema": "http://schema.org/",
+      },
+      "@type": "Person"
+    };
+
+    const result = await getRDFasJson(solidClientAuthentication.getDefaultSession().info.webId, frame, fetch);
+    const name = getPersonName(result[0]) || solidClientAuthentication.getDefaultSession().info.webId;
+
+    document.getElementById('current-user').innerText = 'Welcome ' + name;
+    document.getElementById('current-user').classList.remove('hidden');
+    document.getElementById('webid-form').classList.add('hidden');
+    solidFetch = solidClientAuthentication.fetch;
+    document.getElementById('participants').classList.remove('hidden');
+    document.querySelector('#participants .loader').classList.remove('hidden');
+
+    await fetchParticipantWebIDs(solidFetch);
+    console.log('participants web ids fetched');
+    await fetchDataOfWebIDs(solidFetch);
+    console.log('data of web ids fetched');
+    populateParticipants();
+
+    document.querySelector('#participants .loader').classList.add('hidden');
+    document.getElementById('find-slots').classList.remove('hidden');
+  }
+}
+
+async function fetchParticipantWebIDs(fetch) {
+  const frame = {
+    "@context": {
+      "@vocab": "http://schema.org/"
+    },
+    "employee": {}
+  };
+
+  const result = await getRDFasJson(employeesUrl, frame, fetch);
+  const ids = result[0].employee.map(a => a['@id']);
+
+  ids.forEach(id => {
+    participants[id] = {};
+  });
+
+  console.log(participants);
+}
+
+async function fetchDataOfWebIDs(fetch) {
+  const webids = Object.keys(participants);
+  const frame = {
+    "@context": {
+      "@vocab": "http://xmlns.com/foaf/0.1/",
+      "knows": "https://data.knows.idlab.ugent.be/person/office/#",
+      "schema": "http://schema.org/"
+    },
+    "@type": "Person"
+  };
+
+  for (let i = 0; i < webids.length; i++) {
+    const id = webids[i];
+
+    if (id.startsWith('http')) {
+      try {
+        const result = await getRDFasJson(id, frame, fetch);
+        let calendar = undefined;
+
+        if (result.length === 0) {
+          participants[id].error = 'No results in JSON-LD';
+          return;
+        }
+
+        if (result[0]['knows:hasAvailabilityCalendar'] && result[0]['knows:hasAvailabilityCalendar']['schema:url']) {
+          calendar = result[0]['knows:hasAvailabilityCalendar']['schema:url'];
+        }
+
+        participants[id] = {
+          name: getPersonName(result[0]) || id,
+          calendar
+        };
+      } catch (e) {
+        if (e.includes && e.includes('conversion')) {
+          participants[id].error = e;
+        } else {
+          participants[id].error = 'Unable to fetch data.'
+        }
+      }
+    }
+  }
+}
+
+function populateParticipants() {
+  const dataArray = sortParticipants();
+  console.log(dataArray);
+  const $list = document.getElementById('participant-list');
+  $list.innerHTML = '';
+
+  dataArray.forEach(data => {
+    const id = data.id;
+    const $div = document.createElement('div');
+    const $input = document.createElement('input');
+    $input.setAttribute('type', 'checkbox');
+    $input.setAttribute('id', id);
+    $input.setAttribute('name', id);
+
+    if (data.error || !data.calendar) {
+      $input.setAttribute('disabled', true);
     }
 
-    return new Promise(async (resolve, reject) => {
-      const myHeaders = new Headers();
-      myHeaders.append('Accept', 'text/turtle');
-      const myInit = {
-        method: 'GET',
-        headers: myHeaders,
-        mode: 'cors',
-        cache: 'default'
-      };
-      let myRequest = new Request(url);
+    $div.appendChild($input);
 
-      try {
-        const response = await fetch(myRequest, myInit);
-        const turtle = await response.text();
-        //console.log(turtle);
-        const parser = new N3.Parser({format: 'text/turtle', baseIRI: url});
-        const quads = [];
-        parser.parse(turtle, (error, quad, prefixes) => {
-          if (error) {
-            reject(error);
-          } else if (quad) {
-            quads.push(quad);
-          } else {
-            const writer = new N3.Writer({format: 'application/n-quads'});
-            writer.addQuads(quads);
-            writer.end(async (error, result) => {
-              if (error) {
-                reject(error);
-              } else {
-                // console.log(result);
-                try {
-                  let doc = await jsonld.fromRDF(result, {format: 'application/n-quads'});
-                  doc = await jsonld.frame(doc, frame)
-                  resolve(doc['@graph']);
-                } catch (err) {
-                  reject('JSON-LD conversion error');
-                }
-              }
-            });
-          }
-        });
-      } catch (e) {
-        reject(e);
-      }
-    });
+    const $label = document.createElement('label');
+    $label.setAttribute('for', id);
+    $label.innerText = data.name || id;
+
+    if (data.error) {
+      $label.innerText += ' (Error: ' + data.error + ')';
+    } else if (!data.calendar) {
+      $label.innerText += ' (No availability calendar found.)'
+    }
+
+    $div.appendChild($label);
+
+    $list.appendChild($div);
+  });
+}
+
+function sortParticipants() {
+  const temp = [];
+
+  const webids = Object.keys(participants);
+  webids.forEach(id => {
+    const data = JSON.parse(JSON.stringify(participants[id]));
+    data.id = id;
+    temp.push(data);
+  });
+
+  temp.sort((a, b) => {
+    if (a.name < b.name) {
+      return -1;
+    } else if (a.name > b.name) {
+      return 1;
+    } else {
+      return 0;
+    }
+  });
+
+  return temp;
+}
+
+function getRDFasJson(url, frame, fetch) {
+  if (!fetch) {
+    throw new Error('No fetch function is provided.');
   }
-};
+
+  if (url.startsWith('test:')) {
+    return dummyData[url];
+  }
+
+  return new Promise(async (resolve, reject) => {
+    const myHeaders = new Headers();
+    myHeaders.append('Accept', 'text/turtle');
+    const myInit = {
+      method: 'GET',
+      headers: {'accept': 'text/turtle'},
+      mode: 'cors',
+      cache: 'default'
+    };
+
+    try {
+      const response = await fetch(url, myInit);
+      const turtle = await response.text();
+      //console.log(turtle);
+      const parser = new N3.Parser({format: 'text/turtle', baseIRI: url});
+      const quads = [];
+      parser.parse(turtle, (error, quad, prefixes) => {
+        if (error) {
+          reject(error);
+        } else if (quad) {
+          quads.push(quad);
+        } else {
+          const writer = new N3.Writer({format: 'application/n-quads'});
+          writer.addQuads(quads);
+          writer.end(async (error, result) => {
+            if (error) {
+              reject(error);
+            } else {
+              // console.log(result);
+              try {
+                let doc = await jsonld.fromRDF(result, {format: 'application/n-quads'});
+                doc = await jsonld.frame(doc, frame)
+                resolve(doc['@graph']);
+              } catch (err) {
+                reject('JSON-LD conversion error');
+              }
+            }
+          });
+        }
+      });
+    } catch (e) {
+      reject(e);
+    }
+  });
+}
+
+function getPersonName(person) {
+  if (person.name) {
+    return person.name['@value']
+  } else if (person.givenName) {
+    return person.givenName['@value'] + ' ' + person.familyName['@value']
+  }
+}
