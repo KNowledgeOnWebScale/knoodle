@@ -64,7 +64,7 @@ window.onload = async () => {
         "schema": "http://schema.org/",
         "solid": "http://www.w3.org/ns/solid/terms#"
       },
-      "@type": "Person"
+      "@id": webId
     };
 
     const result = await getRDFasJson(webId, frame, fetch);
@@ -129,17 +129,18 @@ async function loginAndFetch(oidcIssuer) {
       });
     }
   } else {
+    const webid = solidClientAuthentication.getDefaultSession().info.webId;
     const frame = {
       "@context": {
         "@vocab": "http://xmlns.com/foaf/0.1/",
         "knows": "https://data.knows.idlab.ugent.be/person/office/#",
         "schema": "http://schema.org/",
       },
-      "@type": "Person"
+      "@id": webid
     };
 
-    const result = await getRDFasJson(solidClientAuthentication.getDefaultSession().info.webId, frame, fetch);
-    const name = getPersonName(result) || solidClientAuthentication.getDefaultSession().info.webId;
+    const result = await getRDFasJson(webid, frame, fetch);
+    const name = getPersonName(result) || webid;
 
     document.getElementById('current-user').innerText = 'Welcome ' + name;
     document.getElementById('current-user').classList.remove('hidden');
@@ -184,20 +185,21 @@ async function fetchParticipantWebIDs(fetch) {
 
 async function fetchDataOfWebIDs(fetch) {
   const webids = Object.keys(participants);
-  const frame = {
-    "@context": {
-      "@vocab": "http://xmlns.com/foaf/0.1/",
-      "knows": "https://data.knows.idlab.ugent.be/person/office/#",
-      "schema": "http://schema.org/"
-    },
-    "@type": "Person"
-  };
 
   for (let i = 0; i < webids.length; i++) {
     const id = webids[i];
 
     if (id.startsWith('http')) {
       try {
+        const frame = {
+          "@context": {
+            "@vocab": "http://xmlns.com/foaf/0.1/",
+            "knows": "https://data.knows.idlab.ugent.be/person/office/#",
+            "schema": "http://schema.org/"
+          },
+          "@id": id
+        };
+
         const result = await getRDFasJson(id, frame, fetch);
         let calendar = undefined;
 
@@ -357,9 +359,17 @@ function getRDFasJson(url, frame, fetch) {
 
 function getPersonName(person) {
   if (person.name) {
-    return person.name['@value']
+    if (Array.isArray(person.name)) {
+      return person.name[0]['@value'];
+    } else {
+      return person.name['@value'];
+    }
   } else if (person.givenName) {
-    return person.givenName['@value'] + ' ' + person.familyName['@value']
+    if (Array.isArray(person.givenName)) {
+      return person.givenName[0]['@value'] + ' ' + person.familyName[0]['@value']
+    } else {
+      return person.givenName['@value'] + ' ' + person.familyName['@value'];
+    }
   }
 }
 
