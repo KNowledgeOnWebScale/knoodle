@@ -81,22 +81,22 @@ const employeesUrl = 'https://data.knows.idlab.ugent.be/person/office/employees.
 const dummyData = {
   'test:dummy1': [{
     "@id": 'dummy',
-    "endDate": "2021-11-09T10:00:00.000Z",
-    "startDate": "2021-11-09T09:00:00.000Z"
+    "endDate": "2021-11-19T10:00:00.000Z",
+    "startDate": "2021-11-19T09:00:00.000Z"
   }, {
     "@id": 'dummy2',
-    "endDate": "2021-11-09T14:00:00.000Z",
-    "startDate": "2021-11-09T13:00:00.000Z"
+    "endDate": "2021-11-19T14:00:00.000Z",
+    "startDate": "2021-11-19T13:00:00.000Z"
   }],
   'test:dummy2': [
     {
       "@id": 'dummy',
-      "endDate": "2021-11-09T10:00:00.000Z",
-      "startDate": "2021-11-09T09:30:00.000Z"
+      "endDate": "2021-11-19T10:00:00.000Z",
+      "startDate": "2021-11-19T09:30:00.000Z"
     }, {
       "@id": 'dummy2',
-      "endDate": "2021-11-09T14:00:00.000Z",
-      "startDate": "2021-11-09T13:30:00.000Z"
+      "endDate": "2021-11-19T14:00:00.000Z",
+      "startDate": "2021-11-19T13:30:00.000Z"
     }]
 }
 
