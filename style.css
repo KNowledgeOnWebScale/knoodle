@@ -61,3 +61,18 @@ button {
 #log-in-btn {
     padding: 5px;
 }
+
+.container {
+    display: grid;
+    grid-template-columns: 550px auto;
+}
+
+.grid-left {
+    grid-column-start: 1;
+    grid-column-end: 1;
+}
+
+.grid-right {
+    grid-column-start: 2;
+    grid-column-end: 2;
+}
