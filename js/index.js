@@ -293,15 +293,29 @@ function showSlots(slots) {
   const $tbody = document.querySelector('#slots tbody');
   $tbody.innerHTML = '';
 
+  slots.sort((a, b) => {
+    if (a.startDate < b.startDate) {
+      return -1;
+    } else if (a.startDate > b.startDate) {
+      return 1;
+    } else {
+      return 0;
+    }
+  });
+
   slots.forEach(slot => {
     const $tr = document.createElement('tr');
-    const $from = document.createElement('td');
+
+    const $fromDate = document.createElement('td');
     const startDate = dayjs(slot.startDate);
-    $from.innerText = startDate.format('dddd YYYY-MM-DD HH:mm');
-    $tr.appendChild($from);
+    $fromDate.innerText = startDate.format('dddd YYYY-MM-DD');
+    $tr.appendChild($fromDate);
+
+    const $fromHour = document.createElement('td');
+    $fromHour.innerText = startDate.format('HH:mm');
+    $tr.appendChild($fromHour);
 
     const $till = document.createElement('td');
-
     const endDate = dayjs(slot.endDate);
 
     $till.innerText = ' till ';
