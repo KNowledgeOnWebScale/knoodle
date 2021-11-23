@@ -90,3 +90,65 @@ function getRDFasJson(url, frame, fetch) {
     }
   });
 }
+
+function getSelectedParticipantUrls(participants) {
+  const urls = [];
+  const webids = Object.keys(participants);
+
+  webids.forEach(id => {
+    if (document.getElementById(id)?.checked) {
+      urls.push(participants[id].calendar);
+    }
+  });
+
+  return urls;
+}
+
+async function fetchParticipantWebIDs(fetch, employeesUrl) {
+  const frame = {
+    "@context": {
+      "@vocab": "http://schema.org/"
+    },
+    "employee": {}
+  };
+
+  const result = await getRDFasJson(employeesUrl, frame, fetch);
+  const ids = result.employee.map(a => a['@id']);
+
+  ids.forEach(id => {
+    participants[id] = {};
+  });
+
+  console.log(participants);
+}
+
+function sortParticipants(participants) {
+  const temp = [];
+
+  const webids = Object.keys(participants);
+  webids.forEach(id => {
+    const data = JSON.parse(JSON.stringify(participants[id]));
+    data.id = id;
+    temp.push(data);
+  });
+
+  temp.sort((a, b) => {
+    if (a.name < b.name) {
+      return -1;
+    } else if (a.name > b.name) {
+      return 1;
+    } else {
+      return 0;
+    }
+  });
+
+  return temp;
+}
+
+function getMostRecentWebID() {
+  return window.localStorage.getItem('mostRecentWebID');
+}
+
+function setMostRecentWebID(webId) {
+  return window.localStorage.setItem('mostRecentWebID', webId);
+}

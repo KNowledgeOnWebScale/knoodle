@@ -17,7 +17,7 @@ window.onload = async () => {
     document.getElementById('error').classList.add('hidden');
     document.getElementById('available-slots').classList.add('hidden');
     document.querySelector('#find-slots .loader').classList.remove('hidden');
-    const urls = getSelectedParticipantUrls();
+    const urls = getSelectedParticipantUrls(participants);
     console.log(urls);
 
     if (urls.length < 2) {
@@ -55,6 +55,7 @@ window.onload = async () => {
   document.getElementById('log-in-btn').addEventListener('click', async () => {
     // Get web id
     const webId = document.getElementById('webid').value;
+    setMostRecentWebID(webId);
 
     // Get issuer
     const frame = {
@@ -75,6 +76,8 @@ window.onload = async () => {
       loginAndFetch(oidcIssuer);
     }
   });
+
+  document.getElementById('webid').value = getMostRecentWebID();
 };
 
 const employeesUrl = 'https://data.knows.idlab.ugent.be/person/office/employees.ttl';
@@ -149,7 +152,7 @@ async function loginAndFetch(oidcIssuer) {
     document.getElementById('participants').classList.remove('hidden');
     document.querySelector('#participants .loader').classList.remove('hidden');
 
-    await fetchParticipantWebIDs(solidFetch);
+    await fetchParticipantWebIDs(solidFetch, employeesUrl);
     console.log('participants web ids fetched');
     await fetchDataOfWebIDs(solidFetch);
     console.log('data of web ids fetched');
@@ -163,24 +166,6 @@ async function loginAndFetch(oidcIssuer) {
     document.querySelector('#participants .loader').classList.add('hidden');
     document.getElementById('find-slots').classList.remove('hidden');
   }
-}
-
-async function fetchParticipantWebIDs(fetch) {
-  const frame = {
-    "@context": {
-      "@vocab": "http://schema.org/"
-    },
-    "employee": {}
-  };
-
-  const result = await getRDFasJson(employeesUrl, frame, fetch);
-  const ids = result.employee.map(a => a['@id']);
-
-  ids.forEach(id => {
-    participants[id] = {};
-  });
-
-  console.log(participants);
 }
 
 async function fetchDataOfWebIDs(fetch) {
@@ -228,7 +213,7 @@ async function fetchDataOfWebIDs(fetch) {
 }
 
 function populateParticipants() {
-  const dataArray = sortParticipants();
+  const dataArray = sortParticipants(participants);
   const $validList = document.getElementById('participant-list');
   const $invalidList = document.getElementById('invalid-participants-list');
   $validList.innerHTML = '';
@@ -269,29 +254,6 @@ function populateParticipants() {
   });
 
   return invalidParticipants;
-}
-
-function sortParticipants() {
-  const temp = [];
-
-  const webids = Object.keys(participants);
-  webids.forEach(id => {
-    const data = JSON.parse(JSON.stringify(participants[id]));
-    data.id = id;
-    temp.push(data);
-  });
-
-  temp.sort((a, b) => {
-    if (a.name < b.name) {
-      return -1;
-    } else if (a.name > b.name) {
-      return 1;
-    } else {
-      return 0;
-    }
-  });
-
-  return temp;
 }
 
 async function findSlots(urls) {
@@ -355,17 +317,4 @@ function showSlots(slots) {
 
   document.getElementById('available-slots').classList.remove('hidden');
   document.querySelector('#find-slots .loader').classList.add('hidden');
-}
-
-function getSelectedParticipantUrls() {
-  const urls = [];
-  const webids = Object.keys(participants);
-
-  webids.forEach(id => {
-    if (document.getElementById(id)?.checked) {
-      urls.push(participants[id].calendar);
-    }
-  });
-
-  return urls;
 }
