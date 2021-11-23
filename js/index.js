@@ -311,6 +311,8 @@ function showSlots(slots) {
     }
   });
 
+  slots = removePastSlots(slots);
+
   slots.forEach(slot => {
     const $tr = document.createElement('tr');
 

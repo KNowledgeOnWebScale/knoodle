@@ -152,3 +152,10 @@ function getMostRecentWebID() {
 function setMostRecentWebID(webId) {
   return window.localStorage.setItem('mostRecentWebID', webId);
 }
+
+function removePastSlots(slots) {
+  return slots.filter(slot => {
+    const endDate = dayjs(slot.endDate);
+    return !endDate.isBefore(new Date());
+  });
+}

@@ -45,11 +45,6 @@ button {
     }
 }
 
-.hidden {
-    visibility: hidden;
-    display: none;
-}
-
 #webid {
     font-size: 16px;
     padding-top: 9px;
@@ -75,4 +70,26 @@ button {
 .grid-right {
     grid-column-start: 2;
     grid-column-end: 2;
+}
+
+label[for="webid"] {
+    margin-right: 15px;
+}
+
+.outer {
+    width: 100%;
+    text-align: left;
+}
+
+.inner {
+    display: inline-block;
+}
+
+.hidden {
+    visibility: hidden;
+    display: none;
+}
+
+#see-invalid-participants-btn, #hide-invalid-participants-btn {
+    font-size: 14px;
 }
