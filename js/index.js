@@ -52,33 +52,41 @@ window.onload = async () => {
     document.getElementById('see-invalid-participants-btn').classList.remove('hidden');
   });
 
-  document.getElementById('log-in-btn').addEventListener('click', async () => {
-    // Get web id
-    const webId = document.getElementById('webid').value;
-    setMostRecentWebID(webId);
+  document.getElementById('log-in-btn').addEventListener('click', clickLogInBtn);
 
-    // Get issuer
-    const frame = {
-      "@context": {
-        "@vocab": "http://xmlns.com/foaf/0.1/",
-        "knows": "https://data.knows.idlab.ugent.be/person/office/#",
-        "schema": "http://schema.org/",
-        "solid": "http://www.w3.org/ns/solid/terms#"
-      },
-      "@id": webId
-    };
-
-    const result = await getRDFasJson(webId, frame, fetch);
-    const oidcIssuer = result['solid:oidcIssuer']['@id'];
-
-    // Login and fetch
-    if (oidcIssuer) {
-      loginAndFetch(oidcIssuer);
+  const webIDInput = document.getElementById('webid');
+  webIDInput.value = getMostRecentWebID();
+  webIDInput.addEventListener("keyup", ({key}) => {
+    if (key === "Enter") {
+      clickLogInBtn();
     }
-  });
-
-  document.getElementById('webid').value = getMostRecentWebID();
+  })
 };
+
+async function clickLogInBtn() {
+  // Get web id
+  const webId = document.getElementById('webid').value;
+  setMostRecentWebID(webId);
+
+  // Get issuer
+  const frame = {
+    "@context": {
+      "@vocab": "http://xmlns.com/foaf/0.1/",
+      "knows": "https://data.knows.idlab.ugent.be/person/office/#",
+      "schema": "http://schema.org/",
+      "solid": "http://www.w3.org/ns/solid/terms#"
+    },
+    "@id": webId
+  };
+
+  const result = await getRDFasJson(webId, frame, fetch);
+  const oidcIssuer = result['solid:oidcIssuer']['@id'];
+
+  // Login and fetch
+  if (oidcIssuer) {
+    loginAndFetch(oidcIssuer);
+  }
+}
 
 const employeesUrl = 'https://data.knows.idlab.ugent.be/person/office/employees.ttl';
 const dummyData = {
