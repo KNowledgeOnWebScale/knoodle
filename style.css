@@ -45,7 +45,7 @@ button {
     }
 }
 
-#webid {
+#webid, #oidc-issuers {
     font-size: 16px;
     padding-top: 9px;
     padding-left: 10px;
@@ -53,7 +53,7 @@ button {
     width: 350px;
 }
 
-#log-in-btn {
+#log-in-btn, #select-oidc-issuer-btn {
     padding: 5px;
 }
 
@@ -72,8 +72,12 @@ button {
     grid-column-end: 2;
 }
 
-label[for="webid"] {
+label[for="webid"], label[for="oidc-issuers"] {
     margin-right: 15px;
+}
+
+label[for="oidc-issuers"] {
+    line-height: 40px
 }
 
 .outer {

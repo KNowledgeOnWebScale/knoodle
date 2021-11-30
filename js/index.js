@@ -53,6 +53,7 @@ window.onload = async () => {
   });
 
   document.getElementById('log-in-btn').addEventListener('click', clickLogInBtn);
+  document.getElementById('select-oidc-issuer-btn').addEventListener('click', clickSelectOIDCIssuerBtn);
 
   const webIDInput = document.getElementById('webid');
   webIDInput.value = getMostRecentWebID();
@@ -74,18 +75,47 @@ async function clickLogInBtn() {
       "@vocab": "http://xmlns.com/foaf/0.1/",
       "knows": "https://data.knows.idlab.ugent.be/person/office/#",
       "schema": "http://schema.org/",
-      "solid": "http://www.w3.org/ns/solid/terms#"
+      "solid": "http://www.w3.org/ns/solid/terms#",
+      "solid:oidcIssuer": {"@type": "@id"}
     },
     "@id": webId
   };
 
   const result = await getRDFasJson(webId, frame, fetch);
-  const oidcIssuer = result['solid:oidcIssuer']['@id'];
+  const oidcIssuer = result['solid:oidcIssuer'];
+
+  if (Array.isArray(oidcIssuer)) {
+    // Ask user to select desired OIDC issuer.
+    showOIDCIssuerForm(oidcIssuer);
+  }
 
   // Login and fetch
   if (oidcIssuer) {
     loginAndFetch(oidcIssuer);
   }
+}
+
+function clickSelectOIDCIssuerBtn() {
+  const selectedIssuer = document.getElementById('oidc-issuers').value;
+
+  loginAndFetch(selectedIssuer);
+}
+
+function showOIDCIssuerForm(availableIssuers) {
+  const $form = document.getElementById('oidc-issuer-form');
+  $form.classList.remove('hidden');
+
+  const $select = document.getElementById('oidc-issuers');
+  $select.innerHTML = '';
+  availableIssuers.forEach(issuer => {
+    const $option = document.createElement('option');
+    $option.setAttribute('value', issuer);
+    $option.innerText = issuer;
+    $select.appendChild($option);
+  });
+
+  document.getElementById('log-in-btn').classList.add('hidden');
+  document.getElementById('webid').setAttribute('disabled', true);
 }
 
 const employeesUrl = 'https://data.knows.idlab.ugent.be/person/office/employees.ttl';
