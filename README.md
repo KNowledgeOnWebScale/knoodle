@@ -9,6 +9,11 @@ by using their availability calendar which is made available through a Solid pod
 1. Install dependencies via `npm i`.
 2. Run HTTP server via `npm start`.
 
+## Suggested changes for your use case
+
+1. Update the variable `employeesUrl` in `js/index.js` to point to your list of people that will use KNoodle.
+2. Update the method `fetchParticipantWebIDs` in `js/utils.js` to extract the people from the data that is found at `employeesUrl`.
+
 ## Development
 
 - You find all HTML of the application in `index.html`.
