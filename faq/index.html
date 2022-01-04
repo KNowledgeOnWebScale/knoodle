@@ -16,6 +16,7 @@
     <p>
         Your WebID needs to point to your availability calendar using the <code>https://data.knows.idlab.ugent.be/person/office/#hasAvailabilityCalendar</code>.
         For example, this is what you find in Pieter Heyvaert's WebID.
+    <p>
 
     <pre>
     @prefix knows: &lt;https://data.knows.idlab.ugent.be/person/office/#> .
@@ -25,9 +26,28 @@
       knows:hasAvailabilityCalendar &lt;https://pieterheyvaert.com/#availability-calendar> .
     &lt;https://pieterheyvaert.com/#availability-calendar>
       schema:url "https://pheyvaer.pod.knows.idlab.ugent.be/availability" .
-        </pre>
-    </p>
+    </pre>
+
 </div>
+
+<div>
+    <h2>How your availability calendar should look</h2>
+    <p>
+        Your WebID needs to point to your availability calendar using the <code>https://data.knows.idlab.ugent.be/person/office/#hasAvailabilityCalendar</code>.
+        For example, this is what you find in Pieter Heyvaert's WebID.
+    </p>
+
+    <pre>
+    @prefix knows: &lt;https://data.knows.idlab.ugent.be/person/office/#> .
+    @prefix schema: &lt;http://schema.org/> .
+
+    &lt;https://pieterheyvaert.com/#me>
+      knows:hasAvailabilityCalendar &lt;https://pieterheyvaert.com/#availability-calendar> .
+    &lt;https://pieterheyvaert.com/#availability-calendar>
+      schema:url "https://pheyvaer.pod.knows.idlab.ugent.be/availability" .
+    </pre>
+</div>
+
 <div>
     <h2>Issues with CORS headers</h2>
     <p>
