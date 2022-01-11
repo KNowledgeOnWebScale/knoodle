@@ -120,26 +120,9 @@ function showOIDCIssuerForm(availableIssuers) {
 
 const employeesUrl = 'https://data.knows.idlab.ugent.be/person/office/employees.ttl';
 const dummyData = {
-  'test:dummy1': [{
-    "@id": 'dummy',
-    "endDate": "2021-11-19T10:00:00.000Z",
-    "startDate": "2021-11-19T09:00:00.000Z"
-  }, {
-    "@id": 'dummy2',
-    "endDate": "2021-11-19T14:00:00.000Z",
-    "startDate": "2021-11-19T13:00:00.000Z"
-  }],
-  'test:dummy2': [
-    {
-      "@id": 'dummy',
-      "endDate": "2021-11-19T10:00:00.000Z",
-      "startDate": "2021-11-19T09:30:00.000Z"
-    }, {
-      "@id": 'dummy2',
-      "endDate": "2021-11-19T14:00:00.000Z",
-      "startDate": "2021-11-19T13:30:00.000Z"
-    }]
-}
+  'test:dummy1': getDummyDates(),
+  'test:dummy2': getDummyDates(2)
+};
 
 async function loginAndFetch(oidcIssuer) {
   // 1. Call the handleIncomingRedirect() function to complete the authentication process.

@@ -159,3 +159,25 @@ function removePastSlots(slots) {
     return endDate.isAfter(new Date());
   });
 }
+
+function getDummyDates(extra = 0) {
+ const today = dayjs();
+
+ const result = [];
+
+ for (let i = 0; i < 7; i ++) {
+   const startDate = today
+     .add(i + extra, 'day')
+     .hour(9)
+     .toISOString();
+
+   const endDate = today
+     .add(i + extra, 'day')
+     .hour(17)
+     .toISOString();
+
+   result.push({'@id': 'dummy' + (i + extra), startDate, endDate});
+ }
+
+ return result;
+}

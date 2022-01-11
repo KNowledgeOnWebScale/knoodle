@@ -4,6 +4,7 @@ function intersect(...availabilityLists) {
   }
 
   let overlaps = availabilityLists[0];
+  console.log(overlaps);
   availabilityLists.splice(0, 1);
 
   availabilityLists.forEach(list => {
