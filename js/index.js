@@ -292,8 +292,11 @@ async function findSlots(urls) {
       const data = await getRDFasJson(urls[i], frame, solidFetch);
       calendars.push(data['@graph'] || data);
     } catch (e) {
-      if (e.includes('ForbiddenHttpError')) {
+      if (e.includes && e.includes('ForbiddenHttpError')) {
         error = new Error('Forbidden to access: ' + urls[i]);
+        error.url = urls[i];
+      } else {
+        error = new Error(`${e.message}: ${urls[i]}`);
         error.url = urls[i];
       }
 
