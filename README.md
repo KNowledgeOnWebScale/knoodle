@@ -6,8 +6,9 @@ by using their availability calendar which is made available through a Solid pod
 
 ## Run locally via HTTP server
 
-1. Install dependencies via `npm i`. This also runs webpack to generate the browser index.js file
-2. Run HTTP server via `npm start`.
+1. Install dependencies via `npm i`.
+2. Run production HTTP server via `npm start` (this first runs webpack to generate the browser index.js file), OR
+3. Run development HTTP server (that reloads when you make changes) via `npm watch`
 
 ## Suggested changes for your use case
 
@@ -20,7 +21,7 @@ by using their availability calendar which is made available through a Solid pod
 
 - You find all HTML of the application in `index.html`.
 - You find the frequently asked questions page in the folder `faq`.
-- You find some used libraries in the folder `lib`, most are handled using webpack. To create a development webpack bundle, check the commented lines in `webpack.config.js`
+- You find some used libraries in the folder `lib`, most are handled using webpack. To create a development webpack bundle, use `webpack.dev.config.js`
 - You find all custom JavaScript in the folder `js`.
 
 ## License
