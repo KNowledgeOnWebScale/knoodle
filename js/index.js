@@ -1,3 +1,7 @@
+import { getPersonName, getParticipantViaCalendarUrl, getRDFasJson, getSelectedParticipantUrls, fetchParticipantWebIDs, sortParticipants, getMostRecentWebID, setMostRecentWebID, removePastSlots } from './utils'
+import { intersect} from './intersection'
+import dayjs from 'dayjs';
+
 let solidFetch = undefined;
 const participants = {
   'dummy1': {
@@ -9,6 +13,7 @@ const participants = {
     calendar: 'test:dummy2'
   }
 };
+const employeesUrl = 'https://data.knows.idlab.ugent.be/person/office/employees.ttl';
 
 window.onload = async () => {
   loginAndFetch();
@@ -26,7 +31,7 @@ window.onload = async () => {
       $error.classList.remove('hidden');
       document.querySelector('#find-slots .loader').classList.add('hidden');
     } else {
-      const {slots, error} = await findSlots(urls);
+      const { slots, error } = await findSlots(urls);
 
       if (error) {
         const $error = document.getElementById('error');
@@ -57,7 +62,7 @@ window.onload = async () => {
 
   const webIDInput = document.getElementById('webid');
   webIDInput.value = getMostRecentWebID();
-  webIDInput.addEventListener("keyup", ({key}) => {
+  webIDInput.addEventListener("keyup", ({ key }) => {
     if (key === "Enter") {
       clickLogInBtn();
     }
@@ -76,7 +81,7 @@ async function clickLogInBtn() {
       "knows": "https://data.knows.idlab.ugent.be/person/office/#",
       "schema": "http://schema.org/",
       "solid": "http://www.w3.org/ns/solid/terms#",
-      "solid:oidcIssuer": {"@type": "@id"}
+      "solid:oidcIssuer": { "@type": "@id" }
     },
     "@id": webId
   };
@@ -117,12 +122,6 @@ function showOIDCIssuerForm(availableIssuers) {
   document.getElementById('log-in-btn').classList.add('hidden');
   document.getElementById('webid').setAttribute('disabled', true);
 }
-
-const employeesUrl = 'https://data.knows.idlab.ugent.be/person/office/employees.ttl';
-const dummyData = {
-  'test:dummy1': getDummyDates(),
-  'test:dummy2': getDummyDates(2)
-};
 
 async function loginAndFetch(oidcIssuer) {
   // 1. Call the handleIncomingRedirect() function to complete the authentication process.
@@ -245,13 +244,13 @@ function populateParticipants() {
     const id = data.id;
 
     if (data.error || !data.calendar) {
-      invalidParticipants ++;
+      invalidParticipants++;
       const $li = document.createElement('li');
       $li.innerText = data.name || id;
 
       if (data.error) {
         $li.innerText += ' (Error: ' + data.error + ')';
-      } else  {
+      } else {
         $li.innerText += ' (No availability calendar found.)'
       }
 
@@ -281,7 +280,7 @@ async function findSlots(urls) {
   const calendars = [];
 
   const frame = {
-    "@context": {"@vocab": "http://schema.org/"},
+    "@context": { "@vocab": "http://schema.org/" },
     "@type": "Event"
   };
 
@@ -310,7 +309,7 @@ async function findSlots(urls) {
     slots = intersect(...calendars);
   }
 
-  return {slots, error}
+  return { slots, error }
 }
 
 function showSlots(slots) {

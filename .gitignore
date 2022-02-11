@@ -1,2 +1,5 @@
 .idea
 node_modules
+/index.js
+/index.js.LICENSE.txt
+/index.js.map

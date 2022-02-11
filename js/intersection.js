@@ -1,4 +1,4 @@
-function intersect(...availabilityLists) {
+export function intersect(...availabilityLists) {
   if (availabilityLists.length < 2) {
     throw new Error('At least provide 2 availability lists.');
   }

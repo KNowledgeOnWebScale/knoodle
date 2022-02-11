@@ -1,4 +1,14 @@
-function getPersonName(person) {
+import rdfParser from "rdf-parse";
+import dayjs from 'dayjs';
+import jsonld from 'jsonld'
+import { ReadableWebToNodeStream } from 'readable-web-to-node-stream';
+
+const dummyData = {
+  'test:dummy1': getDummyDates(),
+  'test:dummy2': getDummyDates(2)
+};
+
+export function getPersonName(person) {
   if (person.name) {
     if (Array.isArray(person.name)) {
       return person.name[0]['@value'];
@@ -14,12 +24,12 @@ function getPersonName(person) {
   }
 }
 
-function getParticipantViaCalendarUrl(url, participants) {
+export function getParticipantViaCalendarUrl(url, participants) {
   const webids = Object.keys(participants);
   let i = 0;
 
   while (i < webids.length && participants[webids[i]].calendar !== url) {
-    i ++;
+    i++;
   }
 
   if (i < webids.length) {
@@ -29,7 +39,7 @@ function getParticipantViaCalendarUrl(url, participants) {
   return null;
 }
 
-function getRDFasJson(url, frame, fetch) {
+export async function getRDFasJson(url, frame, fetch) {
   if (!fetch) {
     throw new Error('No fetch function is provided.');
   }
@@ -39,11 +49,17 @@ function getRDFasJson(url, frame, fetch) {
   }
 
   return new Promise(async (resolve, reject) => {
-    const myHeaders = new Headers();
-    myHeaders.append('Accept', 'text/turtle');
+    // mostly taken from ldfetch
+    //We like quads, so preference to serializations that we can parse fast with quads
+    //Then comes JSON-LD, which is slower to parse
+    //Then comes rdf/xml, turtle and n-triples, which we support in a fast manner, but it doesn’t contain named graphs
+    //We also support HTML, but that’s really slow
+    //We also support N3 and parse it quite fast, but we won’t do anything special with the N3 rules, so put it to low q
+    var accept = 'application/trig;q=1.0,application/n-quads,application/ld+json;q=0.9,application/rdf+xml;q=0.8,text/turtle,application/n-triples';
+
     const myInit = {
       method: 'GET',
-      headers: {'accept': 'text/turtle'},
+      headers: { 'accept': accept },
       mode: 'cors',
       cache: 'default'
     };
@@ -52,46 +68,24 @@ function getRDFasJson(url, frame, fetch) {
       const response = await fetch(url, myInit);
 
       if (response.status !== 200) {
-        reject(await response.text());
-        return;
+        throw new Error(await response.text());
       }
 
-      const turtle = await response.text();
-      //console.log(turtle);
-      const parser = new N3.Parser({format: 'text/turtle', baseIRI: url});
       const quads = [];
-      parser.parse(turtle, (error, quad, prefixes) => {
-        if (error) {
-          reject(error);
-        } else if (quad) {
-          quads.push(quad);
-        } else {
-          const writer = new N3.Writer({format: 'application/n-quads'});
-          writer.addQuads(quads);
-          writer.end(async (error, result) => {
-            if (error) {
-              reject(error);
-            } else {
-              // console.log(result);
-              try {
-                let doc = await jsonld.fromRDF(result, {format: 'application/n-quads'});
-                doc = await jsonld.frame(doc, frame)
-                resolve(doc);
-              } catch (err) {
-                reject('JSON-LD conversion error');
-              }
-            }
-          });
-        }
-      });
+      rdfParser.parse(new ReadableWebToNodeStream(response.body), { contentType: response.headers.get('content-type').split(';')[0], baseIRI: response.url })
+        .on('data', (quad) => quads.push(quad))
+        .on('error', (error) => reject(error))
+        .on('end', async () => {
+          resolve(await frameFromQuads(quads, frame));
+        });
     } catch (e) {
       console.error(e);
       reject(e);
     }
-  });
+  })
 }
 
-function getSelectedParticipantUrls(participants) {
+export function getSelectedParticipantUrls(participants) {
   const urls = [];
   const webids = Object.keys(participants);
 
@@ -104,7 +98,7 @@ function getSelectedParticipantUrls(participants) {
   return urls;
 }
 
-async function fetchParticipantWebIDs(fetch, employeesUrl) {
+export async function fetchParticipantWebIDs(fetch, employeesUrl) {
   const frame = {
     "@context": {
       "@vocab": "http://schema.org/"
@@ -122,7 +116,7 @@ async function fetchParticipantWebIDs(fetch, employeesUrl) {
   console.log(participants);
 }
 
-function sortParticipants(participants) {
+export function sortParticipants(participants) {
   const temp = [];
 
   const webids = Object.keys(participants);
@@ -145,15 +139,60 @@ function sortParticipants(participants) {
   return temp;
 }
 
-function getMostRecentWebID() {
+async function frameFromQuads(quads, frame) {
+  var objects = { "@graph": [] };
+  var graphs = {};
+  for (var triple of quads) {
+    let subjectURI = triple.subject.value;
+    let objectURI = triple.object.value;
+    //Json-LD lib uses underscores when blanknode
+    if (triple.subject.termType === 'BlankNode') {
+      subjectURI = '_:' + triple.subject.value;
+    }
+    if (triple.object.termType === 'BlankNode') {
+      objectURI = '_:' + triple.object.value;
+    }
+
+    if (triple.graph.value && !graphs[triple.graph.value])
+      graphs[triple.graph.value] = { "@id": triple.graph.value, "@graph": [] };
+
+    var obj = {
+      "@id": subjectURI,
+    };
+    if (triple.object.termType === 'Literal') {
+      obj[triple.predicate.value] = { "@value": triple.object.value };
+      if (triple.predicate.language)
+        obj[triple.predicate.value]["@language"] = triple.object.language;
+      if (triple.object.datatype)
+        obj[triple.predicate.value]["@type"] = triple.object.datatype.value;
+    } else if (triple.predicate.value === 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type') {
+      obj["@type"] = objectURI;
+    } else {
+      obj[triple.predicate.value] = { "@id": objectURI };
+    }
+    if (!triple.graph.value) {
+      objects["@graph"].push(obj);
+    } else {
+      let graphURI = triple.graph.value;
+      if (triple.graph.termType === 'BlankNode') {
+        graphURI = '_:' + triple.graph.value;
+      }
+      graphs[graphURI]["@graph"].push(obj);
+    }
+  }
+  objects["@graph"].push(Object.values(graphs));
+  return jsonld.frame(objects, frame);
+}
+
+export function getMostRecentWebID() {
   return window.localStorage.getItem('mostRecentWebID');
 }
 
-function setMostRecentWebID(webId) {
+export function setMostRecentWebID(webId) {
   return window.localStorage.setItem('mostRecentWebID', webId);
 }
 
-function removePastSlots(slots) {
+export function removePastSlots(slots) {
   return slots.filter(slot => {
     const endDate = dayjs(slot.endDate);
     return endDate.isAfter(new Date());
@@ -161,23 +200,23 @@ function removePastSlots(slots) {
 }
 
 function getDummyDates(extra = 0) {
- const today = dayjs();
+  const today = dayjs();
 
- const result = [];
+  const result = [];
 
- for (let i = 0; i < 7; i ++) {
-   const startDate = today
-     .add(i + extra, 'day')
-     .hour(9)
-     .toISOString();
+  for (let i = 0; i < 7; i++) {
+    const startDate = today
+      .add(i + extra, 'day')
+      .hour(9)
+      .toISOString();
 
-   const endDate = today
-     .add(i + extra, 'day')
-     .hour(17)
-     .toISOString();
+    const endDate = today
+      .add(i + extra, 'day')
+      .hour(17)
+      .toISOString();
 
-   result.push({'@id': 'dummy' + (i + extra), startDate, endDate});
- }
+    result.push({ '@id': 'dummy' + (i + extra), startDate, endDate });
+  }
 
- return result;
+  return result;
 }
