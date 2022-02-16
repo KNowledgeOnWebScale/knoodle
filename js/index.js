@@ -1,22 +1,22 @@
 import { getPersonName, getParticipantViaCalendarUrl, getRDFasJson, getSelectedParticipantUrls, fetchParticipantWebIDs, sortParticipants, getMostRecentWebID, setMostRecentWebID, removePastSlots } from './utils'
-import { intersect} from './intersection'
+import { intersect } from './intersection'
 import dayjs from 'dayjs';
 
-let solidFetch = undefined;
-const participants = {
-  'dummy1': {
-    name: 'Dummy 1',
-    calendar: 'test:dummy1'
-  },
-  'dummy2': {
-    name: 'Dummy 2',
-    calendar: 'test:dummy2'
-  }
-};
-const employeesUrl = 'https://data.knows.idlab.ugent.be/person/office/employees.ttl';
-
 window.onload = async () => {
-  loginAndFetch();
+  let solidFetch = solidClientAuthentication.fetch;
+  const participants = {
+    'dummy1': {
+      name: 'Dummy 1',
+      calendar: 'test:dummy1'
+    },
+    'dummy2': {
+      name: 'Dummy 2',
+      calendar: 'test:dummy2'
+    }
+  };
+  const employeesUrl = 'https://data.knows.idlab.ugent.be/person/office/employees.ttl';
+
+  loginAndFetch(null, employeesUrl, participants, solidFetch);
 
   document.getElementById('btn').addEventListener('click', async () => {
     document.getElementById('error').classList.add('hidden');
@@ -31,7 +31,7 @@ window.onload = async () => {
       $error.classList.remove('hidden');
       document.querySelector('#find-slots .loader').classList.add('hidden');
     } else {
-      const { slots, error } = await findSlots(urls);
+      const { slots, error } = await findSlots(urls, solidFetch);
 
       if (error) {
         const $error = document.getElementById('error');
@@ -57,19 +57,19 @@ window.onload = async () => {
     document.getElementById('see-invalid-participants-btn').classList.remove('hidden');
   });
 
-  document.getElementById('log-in-btn').addEventListener('click', clickLogInBtn);
-  document.getElementById('select-oidc-issuer-btn').addEventListener('click', clickSelectOIDCIssuerBtn);
+  document.getElementById('log-in-btn').addEventListener('click', () => { clickLogInBtn(employeesUrl, participants, solidFetch) });
+  document.getElementById('select-oidc-issuer-btn').addEventListener('click', () => { clickSelectOIDCIssuerBtn(employeesUrl, participants, solidFetch) });
 
   const webIDInput = document.getElementById('webid');
   webIDInput.value = getMostRecentWebID();
   webIDInput.addEventListener("keyup", ({ key }) => {
     if (key === "Enter") {
-      clickLogInBtn();
+      clickLogInBtn(employeesUrl, participants, solidFetch);
     }
   })
 };
 
-async function clickLogInBtn() {
+async function clickLogInBtn(employeesUrl, participants, solidFetch) {
   // Get web id
   const webId = document.getElementById('webid').value;
   setMostRecentWebID(webId);
@@ -96,14 +96,14 @@ async function clickLogInBtn() {
 
   // Login and fetch
   if (oidcIssuer) {
-    loginAndFetch(oidcIssuer);
+    loginAndFetch(oidcIssuer, employeesUrl, participants, solidFetch);
   }
 }
 
-function clickSelectOIDCIssuerBtn() {
+function clickSelectOIDCIssuerBtn(employeesUrl, participants, solidFetch) {
   const selectedIssuer = document.getElementById('oidc-issuers').value;
 
-  loginAndFetch(selectedIssuer);
+  loginAndFetch(selectedIssuer, employeesUrl, participants, solidFetch);
 }
 
 function showOIDCIssuerForm(availableIssuers) {
@@ -123,7 +123,7 @@ function showOIDCIssuerForm(availableIssuers) {
   document.getElementById('webid').setAttribute('disabled', true);
 }
 
-async function loginAndFetch(oidcIssuer) {
+async function loginAndFetch(oidcIssuer, employeesUrl, participants, solidFetch) {
   // 1. Call the handleIncomingRedirect() function to complete the authentication process.
   //   If the page is being loaded after the redirect from the Solid Identity Provider
   //      (i.e., part of the authentication flow), the user's credentials are stored in-memory, and
@@ -168,15 +168,14 @@ async function loginAndFetch(oidcIssuer) {
     document.getElementById('current-user').innerText = 'Welcome ' + name;
     document.getElementById('current-user').classList.remove('hidden');
     document.getElementById('webid-form').classList.add('hidden');
-    solidFetch = solidClientAuthentication.fetch;
     document.getElementById('participants').classList.remove('hidden');
     document.querySelector('#participants .loader').classList.remove('hidden');
 
-    await fetchParticipantWebIDs(solidFetch, employeesUrl);
+    await fetchParticipantWebIDs(employeesUrl, participants, solidFetch);
     console.log('participants web ids fetched');
-    await fetchDataOfWebIDs(solidFetch);
+    await fetchDataOfWebIDs(participants, solidFetch);
     console.log('data of web ids fetched');
-    const invalidParticipantsCount = populateParticipants();
+    const invalidParticipantsCount = populateParticipants(participants);
 
     if (invalidParticipantsCount > 0) {
       document.getElementById('invalid-participants').classList.remove('hidden');
@@ -188,7 +187,7 @@ async function loginAndFetch(oidcIssuer) {
   }
 }
 
-async function fetchDataOfWebIDs(fetch) {
+async function fetchDataOfWebIDs(participants, fetch) {
   const webids = Object.keys(participants);
 
   for (let i = 0; i < webids.length; i++) {
@@ -232,7 +231,7 @@ async function fetchDataOfWebIDs(fetch) {
   }
 }
 
-function populateParticipants() {
+function populateParticipants(participants) {
   const dataArray = sortParticipants(participants);
   const $validList = document.getElementById('participant-list');
   const $invalidList = document.getElementById('invalid-participants-list');
@@ -276,7 +275,7 @@ function populateParticipants() {
   return invalidParticipants;
 }
 
-async function findSlots(urls) {
+async function findSlots(urls, solidFetch) {
   const calendars = [];
 
   const frame = {

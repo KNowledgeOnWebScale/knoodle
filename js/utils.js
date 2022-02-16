@@ -98,7 +98,7 @@ export function getSelectedParticipantUrls(participants) {
   return urls;
 }
 
-export async function fetchParticipantWebIDs(fetch, employeesUrl) {
+export async function fetchParticipantWebIDs(employeesUrl, participants, fetch) {
   const frame = {
     "@context": {
       "@vocab": "http://schema.org/"
@@ -165,6 +165,10 @@ async function frameFromQuads(quads, frame) {
         obj[triple.predicate.value]["@language"] = triple.object.language;
       if (triple.object.datatype)
         obj[triple.predicate.value]["@type"] = triple.object.datatype.value;
+
+      if (triple.object.datatype.value === 'http://www.w3.org/2001/XMLSchema#string') {
+        obj[triple.predicate.value] = triple.object.value;
+      }
     } else if (triple.predicate.value === 'http://www.w3.org/1999/02/22-rdf-syntax-ns#type') {
       obj["@type"] = objectURI;
     } else {
