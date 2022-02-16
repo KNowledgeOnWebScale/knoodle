@@ -173,7 +173,7 @@ async function loginAndFetch(oidcIssuer, employeesUrl, participants, solidFetch)
 
     await fetchParticipantWebIDs(employeesUrl, participants, solidFetch);
     console.log('participants web ids fetched');
-    await fetchDataOfWebIDs(participants, solidFetch);
+    await fetchDataOfWebIDs(participants);
     console.log('data of web ids fetched');
     const invalidParticipantsCount = populateParticipants(participants);
 
@@ -187,7 +187,7 @@ async function loginAndFetch(oidcIssuer, employeesUrl, participants, solidFetch)
   }
 }
 
-async function fetchDataOfWebIDs(participants, fetch) {
+async function fetchDataOfWebIDs(participants) {
   const webids = Object.keys(participants);
 
   for (let i = 0; i < webids.length; i++) {
