@@ -21,7 +21,7 @@ by using their availability calendar which is made available through a Solid pod
 
 - You find all HTML of the application in `index.html`.
 - You find the frequently asked questions page in the folder `faq`.
-- You find some used libraries in the folder `lib`, most are handled using webpack. To create a development webpack bundle, use `webpack.dev.config.js`
+- You find some used libraries in the folder `lib`, most are handled using webpack. To create a development webpack bundle, use `webpack.dev.config.js`.
 - You find all custom JavaScript in the folder `js`.
 
 ## License
