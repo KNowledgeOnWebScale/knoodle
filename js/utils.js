@@ -39,7 +39,7 @@ export function getParticipantViaCalendarUrl(url, participants) {
   return null;
 }
 
-export async function getRDFasJson(url, frame, fetch) {
+export function getRDFasJson(url, frame, fetch) {
   if (!fetch) {
     throw new Error('No fetch function is provided.');
   }
