@@ -70,6 +70,9 @@ window.onload = async () => {
 };
 
 async function clickLogInBtn(employeesUrl, participants, solidFetch) {
+  // Hide no OIDC issuer error
+  document.getElementById('no-oidc-issuer-error').classList.add('hidden');
+
   // Get web id
   const webId = document.getElementById('webid').value;
   setMostRecentWebID(webId);
@@ -97,6 +100,8 @@ async function clickLogInBtn(employeesUrl, participants, solidFetch) {
   // Login and fetch
   if (oidcIssuer) {
     loginAndFetch(oidcIssuer, employeesUrl, participants, solidFetch);
+  } else {
+    document.getElementById('no-oidc-issuer-error').classList.remove('hidden');
   }
 }
 

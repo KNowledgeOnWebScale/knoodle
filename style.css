@@ -12,7 +12,7 @@ button {
     font-size: 20px;
 }
 
-#error {
+.error {
     color: red;
     padding-top: 20px;
 }
