@@ -1,4 +1,15 @@
-import { getPersonName, getParticipantViaCalendarUrl, getRDFasJson, getSelectedParticipantUrls, fetchParticipantWebIDs, sortParticipants, getMostRecentWebID, setMostRecentWebID, removePastSlots } from './utils'
+import {
+  getPersonName,
+  getParticipantViaCalendarUrl,
+  getRDFasJson,
+  getSelectedParticipantUrls,
+  fetchParticipantWebIDs,
+  sortParticipants,
+  getMostRecentWebID,
+  setMostRecentWebID,
+  removePastSlots,
+  selectedParticipantUrls
+} from './utils'
 import { intersect } from './intersection'
 import dayjs from 'dayjs';
 
@@ -31,17 +42,7 @@ window.onload = async () => {
       $error.classList.remove('hidden');
       document.querySelector('#find-slots .loader').classList.add('hidden');
     } else {
-      const { slots, error } = await findSlots(urls, solidFetch);
-
-      if (error) {
-        const $error = document.getElementById('error');
-        const participantWebId = getParticipantViaCalendarUrl(error.url, participants);
-        $error.innerText = `${error.message} (Calendar of ${participants[participantWebId].name} (${participantWebId}))`;
-        $error.classList.remove('hidden');
-        document.querySelector('#find-slots .loader').classList.add('hidden');
-      } else {
-        showSlots(slots);
-      }
+      findAndShowSlots(urls, solidFetch, participants);
     }
   });
 
@@ -59,6 +60,11 @@ window.onload = async () => {
 
   document.getElementById('log-in-btn').addEventListener('click', () => { clickLogInBtn(employeesUrl, participants, solidFetch) });
   document.getElementById('select-oidc-issuer-btn').addEventListener('click', () => { clickSelectOIDCIssuerBtn(employeesUrl, participants, solidFetch) });
+  document.getElementById('show-personal-slots-btn').addEventListener('click', () => {
+    const webId = getMostRecentWebID();
+    findAndShowSlots([participants[webId].calendar], solidFetch, participants);
+    selectedParticipantUrls(participants, [webId]);
+  });
 
   const webIDInput = document.getElementById('webid');
   webIDInput.value = getMostRecentWebID();
@@ -69,6 +75,19 @@ window.onload = async () => {
   })
 };
 
+async function findAndShowSlots(urls, solidFetch, participants) {
+  const { slots, error } = await findSlots(urls, solidFetch);
+
+  if (error) {
+    const $error = document.getElementById('error');
+    const participantWebId = getParticipantViaCalendarUrl(error.url, participants);
+    $error.innerText = `${error.message} (Calendar of ${participants[participantWebId].name} (${participantWebId}))`;
+    $error.classList.remove('hidden');
+    document.querySelector('#find-slots .loader').classList.add('hidden');
+  } else {
+    showSlots(slots);
+  }
+}
 async function clickLogInBtn(employeesUrl, participants, solidFetch) {
   // Hide no OIDC issuer error
   document.getElementById('no-oidc-issuer-error').classList.add('hidden');
@@ -310,7 +329,11 @@ async function findSlots(urls, solidFetch) {
   let slots = undefined;
 
   if (!error) {
-    slots = intersect(...calendars);
+    if (calendars.length > 1) {
+      slots = intersect(...calendars);
+    } else {
+      slots = calendars[0];
+    }
   }
 
   return { slots, error }

@@ -98,6 +98,16 @@ export function getSelectedParticipantUrls(participants) {
   return urls;
 }
 
+export function selectedParticipantUrls(allParticipants, selectedParticipants) {
+  const webids = Object.keys(allParticipants);
+
+  webids.forEach(id => {
+    if (document.getElementById(id)) {
+      document.getElementById(id).checked = selectedParticipants.includes(id);
+    }
+  });
+}
+
 export async function fetchParticipantWebIDs(employeesUrl, participants, fetch) {
   const frame = {
     "@context": {

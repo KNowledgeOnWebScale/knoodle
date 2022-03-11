@@ -97,3 +97,7 @@ label[for="oidc-issuers"] {
 #see-invalid-participants-btn, #hide-invalid-participants-btn {
     font-size: 14px;
 }
+
+#show-personal-slots-btn {
+    margin-top: 20px;
+}
