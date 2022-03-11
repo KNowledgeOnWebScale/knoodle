@@ -98,7 +98,7 @@ export function getSelectedParticipantUrls(participants) {
   return urls;
 }
 
-export function selectedParticipantUrls(allParticipants, selectedParticipants) {
+export function setSelectedParticipantUrls(allParticipants, selectedParticipants) {
   const webids = Object.keys(allParticipants);
 
   webids.forEach(id => {

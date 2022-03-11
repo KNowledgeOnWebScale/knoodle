@@ -8,7 +8,7 @@ import {
   getMostRecentWebID,
   setMostRecentWebID,
   removePastSlots,
-  selectedParticipantUrls
+  setSelectedParticipantUrls
 } from './utils'
 import { intersect } from './intersection'
 import dayjs from 'dayjs';
@@ -63,7 +63,7 @@ window.onload = async () => {
   document.getElementById('show-personal-slots-btn').addEventListener('click', () => {
     const webId = getMostRecentWebID();
     findAndShowSlots([participants[webId].calendar], solidFetch, participants);
-    selectedParticipantUrls(participants, [webId]);
+    setSelectedParticipantUrls(participants, [webId]);
   });
 
   const webIDInput = document.getElementById('webid');
