@@ -85,13 +85,13 @@ export function getRDFasJson(url, frame, fetch) {
   })
 }
 
-export function getSelectedParticipantUrls(participants) {
+export function getSelectedParticipantWebIDs(participants) {
   const urls = [];
   const webids = Object.keys(participants);
 
   webids.forEach(id => {
     if (document.getElementById(id)?.checked) {
-      urls.push(participants[id].calendar);
+      urls.push(id);
     }
   });
 
@@ -233,4 +233,8 @@ function getDummyDates(extra = 0) {
   }
 
   return result;
+}
+
+export function sleep(ms) {
+  return new Promise(resolve => setTimeout(resolve, ms));
 }

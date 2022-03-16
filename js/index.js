@@ -2,15 +2,15 @@ import {
   getPersonName,
   getParticipantViaCalendarUrl,
   getRDFasJson,
-  getSelectedParticipantUrls,
+  getSelectedParticipantWebIDs,
   fetchParticipantWebIDs,
   sortParticipants,
   getMostRecentWebID,
   setMostRecentWebID,
   removePastSlots,
-  setSelectedParticipantUrls
+  setSelectedParticipantUrls, sleep
 } from './utils'
-import { intersect } from './intersection'
+import {intersect} from './intersection'
 import dayjs from 'dayjs';
 
 window.onload = async () => {
@@ -18,11 +18,19 @@ window.onload = async () => {
   const participants = {
     'dummy1': {
       name: 'Dummy 1',
-      calendar: 'test:dummy1'
+      calendar: {
+        url: 'test:dummy1',
+        status: 'not-downloaded',
+        data: undefined
+      }
     },
     'dummy2': {
       name: 'Dummy 2',
-      calendar: 'test:dummy2'
+      calendar: {
+        url: 'test:dummy2',
+        status: 'not-downloaded',
+        data: undefined
+      }
     }
   };
   const employeesUrl = 'https://data.knows.idlab.ugent.be/person/office/employees.ttl';
@@ -33,7 +41,7 @@ window.onload = async () => {
     document.getElementById('error').classList.add('hidden');
     document.getElementById('available-slots').classList.add('hidden');
     document.querySelector('#find-slots .loader').classList.remove('hidden');
-    const urls = getSelectedParticipantUrls(participants);
+    const urls = getSelectedParticipantWebIDs(participants);
     console.log(urls);
 
     if (urls.length < 2) {
@@ -58,17 +66,21 @@ window.onload = async () => {
     document.getElementById('see-invalid-participants-btn').classList.remove('hidden');
   });
 
-  document.getElementById('log-in-btn').addEventListener('click', () => { clickLogInBtn(employeesUrl, participants, solidFetch) });
-  document.getElementById('select-oidc-issuer-btn').addEventListener('click', () => { clickSelectOIDCIssuerBtn(employeesUrl, participants, solidFetch) });
+  document.getElementById('log-in-btn').addEventListener('click', () => {
+    clickLogInBtn(employeesUrl, participants, solidFetch)
+  });
+  document.getElementById('select-oidc-issuer-btn').addEventListener('click', () => {
+    clickSelectOIDCIssuerBtn(employeesUrl, participants, solidFetch)
+  });
   document.getElementById('show-personal-slots-btn').addEventListener('click', () => {
     const webId = getMostRecentWebID();
-    findAndShowSlots([participants[webId].calendar], solidFetch, participants);
+    findAndShowSlots([webId], solidFetch, participants);
     setSelectedParticipantUrls(participants, [webId]);
   });
 
   const webIDInput = document.getElementById('webid');
   webIDInput.value = getMostRecentWebID();
-  webIDInput.addEventListener("keyup", ({ key }) => {
+  webIDInput.addEventListener("keyup", ({key}) => {
     if (key === "Enter") {
       clickLogInBtn(employeesUrl, participants, solidFetch);
     }
@@ -76,7 +88,7 @@ window.onload = async () => {
 };
 
 async function findAndShowSlots(urls, solidFetch, participants) {
-  const { slots, error } = await findSlots(urls, solidFetch);
+  const {slots, error} = await findSlots(urls, participants, solidFetch);
 
   if (error) {
     const $error = document.getElementById('error');
@@ -88,6 +100,7 @@ async function findAndShowSlots(urls, solidFetch, participants) {
     showSlots(slots);
   }
 }
+
 async function clickLogInBtn(employeesUrl, participants, solidFetch) {
   // Hide no OIDC issuer error
   document.getElementById('no-oidc-issuer-error').classList.add('hidden');
@@ -103,7 +116,7 @@ async function clickLogInBtn(employeesUrl, participants, solidFetch) {
       "knows": "https://data.knows.idlab.ugent.be/person/office/#",
       "schema": "http://schema.org/",
       "solid": "http://www.w3.org/ns/solid/terms#",
-      "solid:oidcIssuer": { "@type": "@id" }
+      "solid:oidcIssuer": {"@type": "@id"}
     },
     "@id": webId
   };
@@ -199,7 +212,7 @@ async function loginAndFetch(oidcIssuer, employeesUrl, participants, solidFetch)
     console.log('participants web ids fetched');
     await fetchDataOfWebIDs(participants);
     console.log('data of web ids fetched');
-    const invalidParticipantsCount = populateParticipants(participants);
+    const invalidParticipantsCount = populateParticipants(participants, solidFetch);
 
     if (invalidParticipantsCount > 0) {
       document.getElementById('invalid-participants').classList.remove('hidden');
@@ -242,7 +255,10 @@ async function fetchDataOfWebIDs(participants) {
 
         participants[id] = {
           name: getPersonName(result) || id,
-          calendar
+          calendar: {
+            url: calendar,
+            status: 'not-downloaded'
+          }
         };
       } catch (e) {
         if (e.includes && e.includes('conversion')) {
@@ -255,7 +271,7 @@ async function fetchDataOfWebIDs(participants) {
   }
 }
 
-function populateParticipants(participants) {
+function populateParticipants(participants, solidFetch) {
   const dataArray = sortParticipants(participants);
   const $validList = document.getElementById('participant-list');
   const $invalidList = document.getElementById('invalid-participants-list');
@@ -266,7 +282,7 @@ function populateParticipants(participants) {
   dataArray.forEach(data => {
     const id = data.id;
 
-    if (data.error || !data.calendar) {
+    if (data.error || !data.calendar.url) {
       invalidParticipants++;
       const $li = document.createElement('li');
       $li.innerText = data.name || id;
@@ -296,34 +312,42 @@ function populateParticipants(participants) {
     }
   });
 
+  const checkboxes = document.querySelectorAll("input[type=checkbox]");
+
+  checkboxes.forEach(checkbox => {
+    checkbox.addEventListener('change', () => {
+      const webid = checkbox.name;
+
+      if (checkbox.checked && participants[webid].calendar.status === 'not-downloaded') {
+        downloadCalendar(webid, participants, solidFetch);
+      }
+    })
+  });
+
   return invalidParticipants;
 }
 
-async function findSlots(urls, solidFetch) {
+async function findSlots(urls, participants, solidFetch) {
   const calendars = [];
-
-  const frame = {
-    "@context": { "@vocab": "http://schema.org/" },
-    "@type": "Event"
-  };
-
   let error = undefined;
 
   for (let i = 0; i < urls.length; i++) {
-    try {
-      const data = await getRDFasJson(urls[i], frame, solidFetch);
-      calendars.push(data['@graph'] || data);
-    } catch (e) {
-      if (e.includes && e.includes('ForbiddenHttpError')) {
-        error = new Error('Forbidden to access: ' + urls[i]);
-        error.url = urls[i];
-      } else {
-        error = new Error(`${e.message}: ${urls[i]}`);
-        error.url = urls[i];
-      }
+    const url = urls[i];
 
+    while (participants[url].calendar.status === 'downloading') {
+      await sleep(250);
+    }
+
+    if (participants[url].calendar.status === 'not-downloaded') {
+      await downloadCalendar(url, participants, solidFetch);
+    }
+
+    if (participants[url].calendar.status === 'download-failed') {
+      error = participants[url].calendar.error;
       break;
     }
+
+    calendars.push(participants[url].calendar.data);
   }
 
   let slots = undefined;
@@ -336,7 +360,7 @@ async function findSlots(urls, solidFetch) {
     }
   }
 
-  return { slots, error }
+  return {slots, error}
 }
 
 function showSlots(slots) {
@@ -392,4 +416,36 @@ function showSlots(slots) {
 
   document.getElementById('available-slots').classList.remove('hidden');
   document.querySelector('#find-slots .loader').classList.add('hidden');
+}
+
+async function downloadCalendar(webid, participants, solidFetch) {
+  participants[webid].calendar.status = 'downloading';
+
+  const frame = {
+    "@context": {"@vocab": "http://schema.org/"},
+    "@type": "Event"
+  };
+
+  const url = participants[webid].calendar.url;
+
+  try {
+    const data = await getRDFasJson(url, frame, solidFetch);
+    participants[webid].calendar.data = data['@graph'] || data;
+    participants[webid].calendar.status = 'downloaded';
+  } catch (e) {
+    let error;
+
+    if (e.includes && e.includes('ForbiddenHttpError')) {
+      error = new Error('Forbidden to access: ' + url);
+      error.url = url;
+    } else {
+      error = new Error(`${e.message}: ${url}`);
+      error.url = url;
+    }
+
+    participants[webid].calendar.error = error;
+    participants[webid].calendar.status = 'download-failed';
+  }
+
+  console.log(participants[webid]);
 }
