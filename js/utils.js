@@ -238,3 +238,35 @@ function getDummyDates(extra = 0) {
 export function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
+
+export async function downloadCalendar(webid, participants, solidFetch) {
+  participants[webid].calendar.status = 'downloading';
+
+  const frame = {
+    "@context": {"@vocab": "http://schema.org/"},
+    "@type": "Event"
+  };
+
+  const url = participants[webid].calendar.url;
+
+  try {
+    const data = await getRDFasJson(url, frame, solidFetch);
+    participants[webid].calendar.data = data['@graph'] || data;
+    participants[webid].calendar.status = 'downloaded';
+  } catch (e) {
+    let error;
+
+    if (e.includes && e.includes('ForbiddenHttpError')) {
+      error = new Error('Forbidden to access: ' + url);
+      error.url = url;
+    } else {
+      error = new Error(`${e.message}: ${url}`);
+      error.url = url;
+    }
+
+    participants[webid].calendar.error = error;
+    participants[webid].calendar.status = 'download-failed';
+  }
+
+  console.log(participants[webid]);
+}
