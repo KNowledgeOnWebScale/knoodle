@@ -17,6 +17,7 @@
   "private": "true",
   "dependencies": {
     "@babel/runtime": "^7.17.2",
+    "calendar-link": "^2.1.1",
     "dayjs": "^1.10.7",
     "jsonld": "^5.2.0",
     "rdf-parse": "^1.9.1",

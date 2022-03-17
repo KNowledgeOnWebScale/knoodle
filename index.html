@@ -74,8 +74,39 @@
                     </tbody>
                 </table>
             </div>
+            <div id="desired-slot-message">
+                Click on the desired slot to add it to your calendar.
+            </div>
             <div id="no-slots-message" class="hidden">
                 No slots have been found for the selected participants.
+            </div>
+        </div>
+        <div id="add-slot" class="hidden">
+            <h3>Add slot to your calendar</h3>
+
+            <h4>Set the start and end time</h4>
+
+            <label for="final-slot-start-time">Start time:</label>
+
+            <input type="time" id="final-slot-start-time" name="final-slot-start-time" required>
+
+            <label for="final-slot-end-time">End time:</label>
+
+            <input type="time" id="final-slot-end-time" name="final-slot-end-time" required>
+
+            <p>On <span id="finale-date"></span></p>
+
+            <h4>Select your calendar</h4>
+            <table>
+                <tbody>
+                <tr><td id="google-calendar"><a>Google Calendar</a></td></tr>
+                <tr><td id="outlook"><a>Outlook</a></td></tr>
+                <tr><td id="office365"><a>Office 365</a></td></tr>
+                <tr><td id="other-app"><a>Other calendar application</a></td></tr>
+                </tbody>
+            </table>
+            <div id="update-desired-slot-message">
+                Click on another slot or change the times to update the links.
             </div>
         </div>
     </div>
