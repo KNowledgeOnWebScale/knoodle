@@ -1,17 +1,15 @@
 import {
   getPersonName,
-  getParticipantViaCalendarUrl,
   getRDFasJson,
+  getMostRecentWebID,
+  setMostRecentWebID
+} from './utils';
+import {
   getSelectedParticipantWebIDs,
   fetchParticipantWebIDs,
-  sortParticipants,
-  getMostRecentWebID,
-  setMostRecentWebID,
-  removePastSlots,
-  setSelectedParticipantUrls, sleep, downloadCalendar
-} from './utils'
-import {intersect} from './intersection'
-import dayjs from 'dayjs';
+  setSelectedParticipantUrls, fetchDataOfParticipants, addParticipantToList
+} from './participants';
+import {findAndShowSlots} from "./slots";
 
 window.onload = async () => {
   let solidFetch = solidClientAuthentication.fetch;
@@ -86,20 +84,6 @@ window.onload = async () => {
     }
   })
 };
-
-async function findAndShowSlots(urls, solidFetch, participants) {
-  const {slots, error} = await findSlots(urls, participants, solidFetch);
-
-  if (error) {
-    const $error = document.getElementById('error');
-    const participantWebId = getParticipantViaCalendarUrl(error.url, participants);
-    $error.innerText = `${error.message} (Calendar of ${participants[participantWebId].name} (${participantWebId}))`;
-    $error.classList.remove('hidden');
-    document.querySelector('#find-slots .loader').classList.add('hidden');
-  } else {
-    showSlots(slots);
-  }
-}
 
 async function clickLogInBtn(employeesUrl, participants, solidFetch) {
   // Hide no OIDC issuer error
@@ -209,211 +193,20 @@ async function loginAndFetch(oidcIssuer, employeesUrl, participants, solidFetch)
     document.querySelector('#participants .loader').classList.remove('hidden');
 
     await fetchParticipantWebIDs(employeesUrl, participants, solidFetch);
-    console.log('participants web ids fetched');
-    await fetchDataOfWebIDs(participants);
-    console.log('data of web ids fetched');
-    const invalidParticipantsCount = populateParticipants(participants, solidFetch);
+    console.log(`All participants' WebIDs fetched.`);
 
-    if (invalidParticipantsCount > 0) {
-      document.getElementById('invalid-participants').classList.remove('hidden');
-      document.getElementById('invalid-participants-count').innerText = invalidParticipantsCount;
-    }
+    const $validList = document.getElementById('participant-list');
+    const $invalidList = document.getElementById('invalid-participants-list');
+    $validList.innerHTML = '';
+    $invalidList.innerHTML = '';
+
+    addParticipantToList(participants, 'dummy1', solidFetch);
+    addParticipantToList(participants, 'dummy2', solidFetch);
+    await fetchDataOfParticipants(participants, solidFetch, addParticipantToList);
+    console.log('All participants loaded.');
 
     document.querySelector('#participants .loader').classList.add('hidden');
     document.getElementById('find-slots').classList.remove('hidden');
   }
 }
 
-async function fetchDataOfWebIDs(participants) {
-  const webids = Object.keys(participants);
-
-  for (let i = 0; i < webids.length; i++) {
-    const id = webids[i];
-
-    if (id.startsWith('http')) {
-      try {
-        const frame = {
-          "@context": {
-            "@vocab": "http://xmlns.com/foaf/0.1/",
-            "knows": "https://data.knows.idlab.ugent.be/person/office/#",
-            "schema": "http://schema.org/"
-          },
-          "@id": id
-        };
-
-        const result = await getRDFasJson(id, frame, fetch);
-        let calendar = undefined;
-
-        if (result.length === 0) {
-          participants[id].error = 'No results in JSON-LD';
-          return;
-        }
-
-        if (result['knows:hasAvailabilityCalendar'] && result['knows:hasAvailabilityCalendar']['schema:url']) {
-          calendar = result['knows:hasAvailabilityCalendar']['schema:url'];
-        }
-
-        participants[id] = {
-          name: getPersonName(result) || id,
-          calendar: {
-            url: calendar,
-            status: 'not-downloaded'
-          }
-        };
-      } catch (e) {
-        if (e.includes && e.includes('conversion')) {
-          participants[id].error = e;
-        } else {
-          participants[id].error = 'Unable to fetch data.'
-        }
-      }
-    }
-  }
-}
-
-function populateParticipants(participants, solidFetch) {
-  const dataArray = sortParticipants(participants);
-  const $validList = document.getElementById('participant-list');
-  const $invalidList = document.getElementById('invalid-participants-list');
-  $validList.innerHTML = '';
-  $invalidList.innerHTML = '';
-  let invalidParticipants = 0;
-
-  dataArray.forEach(data => {
-    const id = data.id;
-
-    if (data.error || !data.calendar.url) {
-      invalidParticipants++;
-      const $li = document.createElement('li');
-      $li.innerText = data.name || id;
-
-      if (data.error) {
-        $li.innerText += ' (Error: ' + data.error + ')';
-      } else {
-        $li.innerText += ' (No availability calendar found.)'
-      }
-
-      $invalidList.appendChild($li);
-    } else {
-      const $div = document.createElement('div');
-      const $input = document.createElement('input');
-      $input.setAttribute('type', 'checkbox');
-      $input.setAttribute('id', id);
-      $input.setAttribute('name', id);
-
-      $div.appendChild($input);
-
-      const $label = document.createElement('label');
-      $label.setAttribute('for', id);
-      $label.innerText = data.name || id;
-      $div.appendChild($label);
-
-      $validList.appendChild($div);
-    }
-  });
-
-  const checkboxes = document.querySelectorAll("input[type=checkbox]");
-
-  checkboxes.forEach(checkbox => {
-    checkbox.addEventListener('change', () => {
-      const webid = checkbox.name;
-
-      if (checkbox.checked && participants[webid].calendar.status === 'not-downloaded') {
-        downloadCalendar(webid, participants, solidFetch);
-      }
-    })
-  });
-
-  return invalidParticipants;
-}
-
-async function findSlots(urls, participants, solidFetch) {
-  const calendars = [];
-  let error = undefined;
-
-  for (let i = 0; i < urls.length; i++) {
-    const url = urls[i];
-
-    while (participants[url].calendar.status === 'downloading') {
-      await sleep(250);
-    }
-
-    if (participants[url].calendar.status === 'not-downloaded') {
-      await downloadCalendar(url, participants, solidFetch);
-    }
-
-    if (participants[url].calendar.status === 'download-failed') {
-      error = participants[url].calendar.error;
-      break;
-    }
-
-    calendars.push(participants[url].calendar.data);
-  }
-
-  let slots = undefined;
-
-  if (!error) {
-    if (calendars.length > 1) {
-      slots = intersect(...calendars);
-    } else {
-      slots = calendars[0];
-    }
-  }
-
-  return {slots, error}
-}
-
-function showSlots(slots) {
-  if (slots.length === 0) {
-    document.getElementById('no-slots-message').classList.remove('hidden');
-    document.getElementById('slots').classList.add('hidden');
-
-  } else {
-    document.getElementById('no-slots-message').classList.add('hidden');
-    document.getElementById('slots').classList.remove('hidden');
-
-    const $tbody = document.querySelector('#slots tbody');
-    $tbody.innerHTML = '';
-
-    slots.sort((a, b) => {
-      if (a.startDate < b.startDate) {
-        return -1;
-      } else if (a.startDate > b.startDate) {
-        return 1;
-      } else {
-        return 0;
-      }
-    });
-
-    slots = removePastSlots(slots);
-
-    slots.forEach(slot => {
-      const $tr = document.createElement('tr');
-
-      const $fromDate = document.createElement('td');
-      const startDate = dayjs(slot.startDate);
-      $fromDate.innerText = startDate.format('dddd YYYY-MM-DD');
-      $tr.appendChild($fromDate);
-
-      const $fromHour = document.createElement('td');
-      $fromHour.innerText = startDate.format('HH:mm');
-      $tr.appendChild($fromHour);
-
-      const $till = document.createElement('td');
-      const endDate = dayjs(slot.endDate);
-
-      $till.innerText = ' till ';
-      if (endDate.isSame(startDate, 'day')) {
-        $till.innerText += dayjs(slot.endDate).format('HH:mm');
-      } else {
-        $till.innerText += dayjs(slot.endDate).format('dddd YYYY-MM-DD HH:mm');
-      }
-      $tr.appendChild($till);
-
-      $tbody.appendChild($tr);
-    });
-  }
-
-  document.getElementById('available-slots').classList.remove('hidden');
-  document.querySelector('#find-slots .loader').classList.add('hidden');
-}
