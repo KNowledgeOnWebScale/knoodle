@@ -24,21 +24,6 @@ export function getPersonName(person) {
   }
 }
 
-export function getParticipantViaCalendarUrl(url, participants) {
-  const webids = Object.keys(participants);
-  let i = 0;
-
-  while (i < webids.length && participants[webids[i]].calendar !== url) {
-    i++;
-  }
-
-  if (i < webids.length) {
-    return webids[i];
-  }
-
-  return null;
-}
-
 export function getRDFasJson(url, frame, fetch) {
   if (!fetch) {
     throw new Error('No fetch function is provided.');
@@ -83,70 +68,6 @@ export function getRDFasJson(url, frame, fetch) {
       reject(e);
     }
   })
-}
-
-export function getSelectedParticipantWebIDs(participants) {
-  const urls = [];
-  const webids = Object.keys(participants);
-
-  webids.forEach(id => {
-    if (document.getElementById(id)?.checked) {
-      urls.push(id);
-    }
-  });
-
-  return urls;
-}
-
-export function setSelectedParticipantUrls(allParticipants, selectedParticipants) {
-  const webids = Object.keys(allParticipants);
-
-  webids.forEach(id => {
-    if (document.getElementById(id)) {
-      document.getElementById(id).checked = selectedParticipants.includes(id);
-    }
-  });
-}
-
-export async function fetchParticipantWebIDs(employeesUrl, participants, fetch) {
-  const frame = {
-    "@context": {
-      "@vocab": "http://schema.org/"
-    },
-    "employee": {}
-  };
-
-  const result = await getRDFasJson(employeesUrl, frame, fetch);
-  const ids = result.employee.map(a => a['@id']);
-
-  ids.forEach(id => {
-    participants[id] = {};
-  });
-
-  console.log(participants);
-}
-
-export function sortParticipants(participants) {
-  const temp = [];
-
-  const webids = Object.keys(participants);
-  webids.forEach(id => {
-    const data = JSON.parse(JSON.stringify(participants[id]));
-    data.id = id;
-    temp.push(data);
-  });
-
-  temp.sort((a, b) => {
-    if (a.name < b.name) {
-      return -1;
-    } else if (a.name > b.name) {
-      return 1;
-    } else {
-      return 0;
-    }
-  });
-
-  return temp;
 }
 
 async function frameFromQuads(quads, frame) {
