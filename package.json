@@ -1,4 +1,10 @@
 {
+  "name": "knoodle",
+  "version": "1.0.0",
+  "author": "Pieter Heyvaert (https://pieterheyvaert.com)",
+  "contributors": [
+    "Ben De Meester (https://ben.de-meester.org)"
+  ],
   "scripts": {
     "prestart": "npx webpack",
     "start": "npx http-server .",
@@ -22,5 +28,6 @@
     "jsonld": "^5.2.0",
     "rdf-parse": "^1.9.1",
     "readable-web-to-node-stream": "^3.0.2"
-  }
+  },
+  "license": "MIT"
 }

@@ -144,6 +144,10 @@ function showCalendarLinksForSlot(startDate, endDate) {
   officeLink.setAttribute('href', office365(event));
   officeLink.setAttribute('target', '_blank');
 
+  const yahooLink = document.querySelector('#yahoo a');
+  yahooLink.setAttribute('href', yahoo(event));
+  yahooLink.setAttribute('target', '_blank');
+
   const otherApp = document.querySelector('#other-app a');
   otherApp.setAttribute('href', ics(event));
   otherApp.setAttribute('download', 'meeting.ics');
@@ -169,6 +173,7 @@ function showCalendarLinksForSlot(startDate, endDate) {
       googleLink.setAttribute('href', google(event));
       outlookLink.setAttribute('href', outlook(event));
       officeLink.setAttribute('href', office365(event));
+      yahooLink.setAttribute('href', yahoo(event));
       otherApp.setAttribute('href', ics(event));
     }
 

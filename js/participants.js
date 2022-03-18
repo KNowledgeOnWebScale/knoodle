@@ -68,7 +68,7 @@ export function getParticipantViaCalendarUrl(url, participants) {
   const webids = Object.keys(participants);
   let i = 0;
 
-  while (i < webids.length && participants[webids[i]].calendar !== url) {
+  while (i < webids.length && participants[webids[i]].calendar.url !== url) {
     i++;
   }
 
