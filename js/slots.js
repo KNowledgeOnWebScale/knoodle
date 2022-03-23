@@ -1,11 +1,11 @@
-import {downloadCalendar, removePastSlots, sleep} from "./utils";
+import {downloadCalendar, getMostRecentWebID, removePastSlots, sleep} from "./utils";
 import {intersect} from "./intersection";
 import dayjs from "dayjs";
-import {getParticipantViaCalendarUrl} from "./participants";
+import {getParticipantEmails, getParticipantViaCalendarUrl} from "./participants";
 import {google, outlook, office365, yahoo, ics} from "calendar-link";
 
-export async function findAndShowSlots(urls, solidFetch, participants) {
-  const {slots, error} = await findSlots(urls, participants, solidFetch);
+export async function findAndShowSlots(webids, solidFetch, participants) {
+  const {slots, error} = await findSlots(webids, participants, solidFetch);
 
   if (error) {
     const $error = document.getElementById('error');
@@ -14,19 +14,20 @@ export async function findAndShowSlots(urls, solidFetch, participants) {
     $error.classList.remove('hidden');
     document.querySelector('#find-slots .loader').classList.add('hidden');
   } else {
-    showSlots(slots);
+    const loggedInWebId = getMostRecentWebID();
+    showSlots(slots, getParticipantEmails(webids.filter(id => id !== loggedInWebId), participants));
   }
 }
 
-async function findSlots(urls, participants, solidFetch) {
+async function findSlots(webids, participants, solidFetch) {
   document.getElementById('add-slot').classList.add('hidden');
   document.getElementById('desired-slot-message').classList.remove('hidden');
 
   const calendars = [];
   let error = undefined;
 
-  for (let i = 0; i < urls.length; i++) {
-    const url = urls[i];
+  for (let i = 0; i < webids.length; i++) {
+    const url = webids[i];
 
     while (participants[url].calendar.status === 'downloading') {
       await sleep(250);
@@ -57,7 +58,7 @@ async function findSlots(urls, participants, solidFetch) {
   return {slots, error}
 }
 
-function showSlots(slots) {
+function showSlots(slots, participantEmails) {
   if (slots.length === 0) {
     document.getElementById('no-slots-message').classList.remove('hidden');
     document.getElementById('slots').classList.add('hidden');
@@ -104,7 +105,7 @@ function showSlots(slots) {
       $tr.appendChild($till);
 
       $tr.addEventListener('click', () => {
-        showCalendarLinksForSlot(slot.startDate, slot.endDate);
+        showCalendarLinksForSlot(slot.startDate, slot.endDate, participantEmails);
       });
 
       $tbody.appendChild($tr);
@@ -120,9 +121,10 @@ const event = {
   title: 'Meeting'
 }
 
-function showCalendarLinksForSlot(startDate, endDate) {
+function showCalendarLinksForSlot(startDate, endDate, participantEmails = []) {
   event.start = startDate;
   event.end = endDate;
+  event.guests = participantEmails;
 
   document.getElementById('finale-date').innerText = dayjs(startDate).format('dddd YYYY-MM-DD');
 

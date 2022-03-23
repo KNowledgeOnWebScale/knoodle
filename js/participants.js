@@ -79,6 +79,18 @@ export function getParticipantViaCalendarUrl(url, participants) {
   return null;
 }
 
+export function getParticipantEmails(webids, participants) {
+  const emails = [];
+
+  webids.forEach(webid => {
+    if (participants[webid].email) {
+      emails.push(participants[webid].email);
+    }
+  });
+
+  return emails;
+}
+
 export async function fetchDataOfParticipants(participants, solidFetch, callback) {
   const webids = Object.keys(participants);
 
@@ -91,21 +103,33 @@ export async function fetchDataOfParticipants(participants, solidFetch, callback
           "@context": {
             "@vocab": "http://xmlns.com/foaf/0.1/",
             "knows": "https://data.knows.idlab.ugent.be/person/office/#",
-            "schema": "http://schema.org/"
+            "schema": "http://schema.org/",
+            "vcard": "http://www.w3.org/2006/vcard/ns#"
           },
           "@id": id
         };
 
         const result = await getRDFasJson(id, frame, fetch);
-        let calendar = undefined;
 
         if (result.length === 0) {
           participants[id].error = 'No results in JSON-LD';
           return;
         }
 
+        let calendar = undefined;
+
         if (result['knows:hasAvailabilityCalendar'] && result['knows:hasAvailabilityCalendar']['schema:url']) {
           calendar = result['knows:hasAvailabilityCalendar']['schema:url'];
+        }
+
+        let email = result['mbox'] || result['vcard:hasEmail'];
+
+        if (email) {
+          if (email['@id']) {
+            email = email['@id'];
+          }
+
+          email = email.replace('mailto:', '');
         }
 
         participants[id] = {
@@ -113,7 +137,8 @@ export async function fetchDataOfParticipants(participants, solidFetch, callback
           calendar: {
             url: calendar,
             status: 'not-downloaded'
-          }
+          },
+          email
         };
       } catch (e) {
         if (e.includes && e.includes('conversion')) {
