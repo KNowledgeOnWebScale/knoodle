@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+### Added
+- Add option to include emails of participants in meeting invite (see [issue 21](https://github.com/KNowledgeOnWebScale/knoodle/issues/21))
+
 ## 1.0.0 - 2022-03-18
 
 ### Added
