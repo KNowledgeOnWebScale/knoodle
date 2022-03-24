@@ -3,9 +3,12 @@ const path = require('path');
 
 module.exports = {
     mode: "production",
-    entry: path.resolve(__dirname, './js/index.js'),
+    entry: {
+        index: path.resolve(__dirname, './js/index.js'),
+        faq: path.resolve(__dirname, './js/faq.js')
+    },
     output: {
-        filename: 'index.js',
+        filename: '[name].js',
         path: path.resolve(__dirname),
     },
     target: ['web', 'es5'],
