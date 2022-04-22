@@ -160,20 +160,20 @@ export function sleep(ms) {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-export async function downloadCalendar(webid, participants, solidFetch) {
-  participants[webid].calendar.status = 'downloading';
+export async function downloadAvailabilityCalendar(webid, participants, solidFetch) {
+  participants[webid].availabilityCalendar.status = 'downloading';
 
   const frame = {
     "@context": {"@vocab": "http://schema.org/"},
     "@type": "Event"
   };
 
-  const url = participants[webid].calendar.url;
+  const url = participants[webid].availabilityCalendar.url;
 
   try {
     const data = await getRDFasJson(url, frame, solidFetch);
-    participants[webid].calendar.data = data['@graph'] || data;
-    participants[webid].calendar.status = 'downloaded';
+    participants[webid].availabilityCalendar.data = data['@graph'] || data;
+    participants[webid].availabilityCalendar.status = 'downloaded';
   } catch (e) {
     let error;
 
@@ -185,9 +185,63 @@ export async function downloadCalendar(webid, participants, solidFetch) {
       error.url = url;
     }
 
-    participants[webid].calendar.error = error;
-    participants[webid].calendar.status = 'download-failed';
+    participants[webid].availabilityCalendar.error = error;
+    participants[webid].availabilityCalendar.status = 'download-failed';
   }
 
   console.log(participants[webid]);
+}
+
+export async function downloadVacationCalendar(webid, participants, solidFetch) {
+  const url = participants[webid].vacationCalendar.url;
+
+  if (!url) {
+    throw new Error(`Can't download vacation calendar for ${webid} because url is not available.`);
+  }
+
+  participants[webid].vacationCalendar.status = 'downloading';
+
+  const frame = {
+    "@context": {
+      "@vocab": "https://data.knows.idlab.ugent.be/person/office/#",
+      "knows": "https://data.knows.idlab.ugent.be/person/office/#",
+      "xsd": "http://www.w3.org/2001/XMLSchema#",
+      "knows:date": {
+        "@type": "xsd:date"
+      },
+      "partOfDay": {"@type": "@id"}
+    },
+    "@type": "VacationCalendar",
+    "days": [{}]
+  };
+
+  frame['@id'] = url;
+
+  try {
+    const data = await getRDFasJson(url, frame, solidFetch);
+    participants[webid].vacationCalendar.data = data.days;
+    cleanUpVacationDays(participants[webid].vacationCalendar.data);
+    participants[webid].vacationCalendar.status = 'downloaded';
+  } catch (e) {
+    let error;
+
+    if (e.includes && e.includes('ForbiddenHttpError')) {
+      error = new Error('Forbidden to access: ' + url);
+      error.url = url;
+    } else {
+      error = new Error(`${e.message}: ${url}`);
+      error.url = url;
+    }
+
+    participants[webid].vacationCalendar.error = error;
+    participants[webid].vacationCalendar.status = 'download-failed';
+  }
+
+  console.log(participants[webid].vacationCalendar);
+}
+
+function cleanUpVacationDays(days) {
+  days.forEach(day => {
+    day.partOfDay = day.partOfDay.replace('knows:', '');
+  });
 }

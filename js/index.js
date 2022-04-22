@@ -10,13 +10,14 @@ import {
   setSelectedParticipantUrls, fetchDataOfParticipants, addParticipantToList
 } from './participants';
 import {findAndShowSlots} from "./slots";
+import {fetchAndShowVacationDays} from "./vacation";
 
 window.onload = async () => {
   let solidFetch = solidClientAuthentication.fetch;
   const participants = {
     'dummy1': {
       name: 'Dummy 1',
-      calendar: {
+      availabilityCalendar: {
         url: 'test:dummy1',
         status: 'not-downloaded',
         data: undefined
@@ -24,7 +25,7 @@ window.onload = async () => {
     },
     'dummy2': {
       name: 'Dummy 2',
-      calendar: {
+      availabilityCalendar: {
         url: 'test:dummy2',
         status: 'not-downloaded',
         data: undefined
@@ -74,6 +75,21 @@ window.onload = async () => {
     const webId = getMostRecentWebID();
     findAndShowSlots([webId], solidFetch, participants);
     setSelectedParticipantUrls(participants, [webId]);
+  });
+  document.getElementById('show-vacation-days-btn').addEventListener('click', () => {
+    const $error = document.getElementById('error');
+    $error.classList.add('hidden');
+    const urls = getSelectedParticipantWebIDs(participants);
+
+    if (urls.length !== 1) {
+      $error.innerText = 'Please select exactly 1 participant.';
+      $error.classList.remove('hidden');
+    } else if (!participants[urls[0]].vacationCalendar.url) {
+      $error.innerText = `This person doesn't have a vacation calendar.`;
+      $error.classList.remove('hidden');
+    } else {
+      fetchAndShowVacationDays(urls[0], participants, solidFetch);
+    }
   });
 
   const webIDInput = document.getElementById('webid');

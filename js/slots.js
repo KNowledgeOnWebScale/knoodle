@@ -1,16 +1,17 @@
-import {downloadCalendar, getMostRecentWebID, removePastSlots, sleep} from "./utils";
+import {downloadAvailabilityCalendar, getMostRecentWebID, removePastSlots, sleep} from "./utils";
 import {intersect} from "./intersection";
 import dayjs from "dayjs";
-import {getParticipantEmails, getParticipantViaCalendarUrl} from "./participants";
+import {getParticipantEmails, getParticipantViaAvailabilityCalendarUrl} from "./participants";
 import {google, outlook, office365, yahoo, ics} from "calendar-link";
 
 export async function findAndShowSlots(webids, solidFetch, participants) {
+  document.getElementById('vacation-days-container').classList.add('hidden');
   const {slots, error} = await findSlots(webids, participants, solidFetch);
 
   if (error) {
     const $error = document.getElementById('error');
-    const participantWebId = getParticipantViaCalendarUrl(error.url, participants);
-    $error.innerText = `${error.message} (Calendar of ${participants[participantWebId].name} (${participantWebId}))`;
+    const participantWebId = getParticipantViaAvailabilityCalendarUrl(error.url, participants);
+    $error.innerText = `${error.message} (Availability calendar of ${participants[participantWebId].name} (${participantWebId}))`;
     $error.classList.remove('hidden');
     document.querySelector('#find-slots .loader').classList.add('hidden');
   } else {
@@ -29,20 +30,20 @@ async function findSlots(webids, participants, solidFetch) {
   for (let i = 0; i < webids.length; i++) {
     const url = webids[i];
 
-    while (participants[url].calendar.status === 'downloading') {
+    while (participants[url].availabilityCalendar.status === 'downloading') {
       await sleep(250);
     }
 
-    if (participants[url].calendar.status === 'not-downloaded') {
-      await downloadCalendar(url, participants, solidFetch);
+    if (participants[url].availabilityCalendar.status === 'not-downloaded') {
+      await downloadAvailabilityCalendar(url, participants, solidFetch);
     }
 
-    if (participants[url].calendar.status === 'download-failed') {
-      error = participants[url].calendar.error;
+    if (participants[url].availabilityCalendar.status === 'download-failed') {
+      error = participants[url].availabilityCalendar.error;
       break;
     }
 
-    calendars.push(participants[url].calendar.data);
+    calendars.push(participants[url].availabilityCalendar.data);
   }
 
   let slots = undefined;

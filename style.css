@@ -98,7 +98,7 @@ label[for="oidc-issuers"] {
     font-size: 14px;
 }
 
-#show-personal-slots-btn {
+#show-personal-slots-btn, #show-vacation-days-btn {
     margin-top: 20px;
 }
 

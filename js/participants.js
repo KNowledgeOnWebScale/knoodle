@@ -1,4 +1,4 @@
-import {downloadCalendar, getPersonName, getRDFasJson} from "./utils";
+import {downloadAvailabilityCalendar, downloadVacationCalendar, getPersonName, getRDFasJson} from "./utils";
 
 export async function fetchParticipantWebIDs(employeesUrl, participants, fetch) {
   const frame = {
@@ -64,11 +64,11 @@ export function getSelectedParticipantWebIDs(participants) {
   return urls;
 }
 
-export function getParticipantViaCalendarUrl(url, participants) {
+export function getParticipantViaAvailabilityCalendarUrl(url, participants) {
   const webids = Object.keys(participants);
   let i = 0;
 
-  while (i < webids.length && participants[webids[i]].calendar.url !== url) {
+  while (i < webids.length && participants[webids[i]].availabilityCalendar.url !== url) {
     i++;
   }
 
@@ -116,10 +116,15 @@ export async function fetchDataOfParticipants(participants, solidFetch, callback
           return;
         }
 
-        let calendar = undefined;
+        let availabilityCalendar = undefined;
+        let vacationCalendar = undefined;
 
         if (result['knows:hasAvailabilityCalendar'] && result['knows:hasAvailabilityCalendar']['schema:url']) {
-          calendar = result['knows:hasAvailabilityCalendar']['schema:url'];
+          availabilityCalendar = result['knows:hasAvailabilityCalendar']['schema:url'];
+        }
+
+        if (result['knows:hasVacationCalendar']) {
+          vacationCalendar = result['knows:hasVacationCalendar']['@id'];
         }
 
         let email = result['mbox'] || result['vcard:hasEmail'];
@@ -134,8 +139,12 @@ export async function fetchDataOfParticipants(participants, solidFetch, callback
 
         participants[id] = {
           name: getPersonName(result) || id,
-          calendar: {
-            url: calendar,
+          availabilityCalendar: {
+            url: availabilityCalendar,
+            status: 'not-downloaded'
+          },
+          vacationCalendar: {
+            url: vacationCalendar,
             status: 'not-downloaded'
           },
           email
@@ -162,7 +171,7 @@ export function addParticipantToList(participants, id, solidFetch) {
   const $validList = document.getElementById('participant-list');
   const $invalidList = document.getElementById('invalid-participants-list');
 
-  if (participant.error || !participant.calendar.url) {
+  if (participant.error || !participant.availabilityCalendar.url) {
     invalidParticipants++;
     const $li = document.createElement('li');
     $li.innerText = participant.name || id;
@@ -177,7 +186,6 @@ export function addParticipantToList(participants, id, solidFetch) {
 
     document.getElementById('invalid-participants').classList.remove('hidden');
     document.getElementById('invalid-participants-count').innerText = invalidParticipants;
-
   } else {
     const $div = document.createElement('div');
     const $input = document.createElement('input');
@@ -198,8 +206,14 @@ export function addParticipantToList(participants, id, solidFetch) {
     checkbox.addEventListener('change', () => {
       const webid = checkbox.name;
 
-      if (checkbox.checked && participants[webid].calendar.status === 'not-downloaded') {
-        downloadCalendar(webid, participants, solidFetch);
+      if (checkbox.checked) {
+        if (participants[webid].availabilityCalendar.status === 'not-downloaded') {
+          downloadAvailabilityCalendar(webid, participants, solidFetch);
+        }
+
+        if (participants[webid].vacationCalendar.status === 'not-downloaded') {
+          downloadVacationCalendar(webid, participants, solidFetch);
+        }
       }
     });
   }

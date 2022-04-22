@@ -52,6 +52,9 @@
                 <button id="btn">Find slots</button>
             </div>
             <div>
+                <button id="show-vacation-days-btn">Show vacation days</button>
+            </div>
+            <div>
                 <button id="show-personal-slots-btn">Show only my slots</button>
             </div>
             <div class="hidden loader lds-dual-ring"></div>
@@ -62,16 +65,7 @@
             <h3>Available slots</h3>
             <div id="slots">
                 <table>
-                    <!--            <thead>-->
-                    <!--            <th>-->
-                    <!--                From-->
-                    <!--            </th>-->
-                    <!--            <th>Till-->
-                    <!--            </th>-->
-                    <!--            </thead>-->
-                    <tbody>
-
-                    </tbody>
+                    <tbody></tbody>
                 </table>
             </div>
             <div id="desired-slot-message">
@@ -108,6 +102,17 @@
             </table>
             <div id="update-desired-slot-message">
                 Click on another slot or change the times to update the links.
+            </div>
+        </div>
+        <div id="vacation-days-container" class="hidden">
+            <h3>Vacation days</h3>
+            <div id="vacation-days">
+                <table>
+                    <tbody></tbody>
+                </table>
+            </div>
+            <div id="no-vacation-days-message" class="hidden">
+                This person has no vacation days planned.
             </div>
         </div>
     </div>
