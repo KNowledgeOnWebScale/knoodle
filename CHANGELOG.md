@@ -10,7 +10,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## [1.1.0] - 2022-05-03
 
 ### Added
-- Vacation days view
+- Vacation days view (see [issue 1](https://github.com/KNowledgeOnWebScale/knoodle/issues/1))
 
 ## [1.0.2] - 2022-03-24
 
