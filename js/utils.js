@@ -3,9 +3,13 @@ import dayjs from 'dayjs';
 import jsonld from 'jsonld'
 import { ReadableWebToNodeStream } from 'readable-web-to-node-stream';
 
+dayjs.extend(require('dayjs/plugin/isSameOrAfter'));
+
 const dummyData = {
-  'test:dummy1': getDummyDates(),
-  'test:dummy2': getDummyDates(2)
+  'test:dummy1': getDummyAvailabilityDates(),
+  'test:dummy2': getDummyAvailabilityDates(2),
+  'test:dummy1-vacation': getDummyVacationDays(),
+  'test:dummy2-vacation': getDummyVacationDays(3)
 };
 
 export function getPersonName(person) {
@@ -134,7 +138,7 @@ export function removePastSlots(slots) {
   });
 }
 
-function getDummyDates(extra = 0) {
+function getDummyAvailabilityDates(extra = 0) {
   const today = dayjs();
 
   const result = [];
@@ -154,6 +158,21 @@ function getDummyDates(extra = 0) {
   }
 
   return result;
+}
+
+function getDummyVacationDays(extra = 0) {
+  const today = dayjs();
+
+  const result = [];
+
+  for (let i = 0; i < 3; i++) {
+    const date = today
+      .add(i + 1 + extra, 'day')
+      .format('YYYY-MM-DD');
+    result.push({ '@id': 'dummy' + (i + extra), date, partOfDay: 'knows:FullDay' });
+  }
+
+  return {days: result};
 }
 
 export function sleep(ms) {
@@ -211,16 +230,14 @@ export async function downloadVacationCalendar(webid, participants, solidFetch) 
       },
       "partOfDay": {"@type": "@id"}
     },
+    "@id": url,
     "@type": "VacationCalendar",
     "days": [{}]
   };
 
-  frame['@id'] = url;
-
   try {
     const data = await getRDFasJson(url, frame, solidFetch);
-    participants[webid].vacationCalendar.data = data.days;
-    cleanUpVacationDays(participants[webid].vacationCalendar.data);
+    participants[webid].vacationCalendar.data = cleanUpVacationDays(data.days);
     participants[webid].vacationCalendar.status = 'downloaded';
   } catch (e) {
     let error;
@@ -241,7 +258,12 @@ export async function downloadVacationCalendar(webid, participants, solidFetch) 
 }
 
 function cleanUpVacationDays(days) {
+  const today = dayjs();
+
   days.forEach(day => {
     day.partOfDay = day.partOfDay.replace('knows:', '');
+    day.partOfDay = day.partOfDay.replace('FullDay', 'Full day');
   });
+
+  return days.filter(day => dayjs(day.date).isSameOrAfter(today));
 }

@@ -18,29 +18,6 @@ export async function fetchParticipantWebIDs(employeesUrl, participants, fetch) 
   console.log(participants);
 }
 
-export function sortParticipants(participants) {
-  const temp = [];
-
-  const webids = Object.keys(participants);
-  webids.forEach(id => {
-    const data = JSON.parse(JSON.stringify(participants[id]));
-    data.id = id;
-    temp.push(data);
-  });
-
-  temp.sort((a, b) => {
-    if (a.name < b.name) {
-      return -1;
-    } else if (a.name > b.name) {
-      return 1;
-    } else {
-      return 0;
-    }
-  });
-
-  return temp;
-}
-
 export function setSelectedParticipantUrls(allParticipants, selectedParticipants) {
   const webids = Object.keys(allParticipants);
 

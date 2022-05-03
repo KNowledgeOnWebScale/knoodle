@@ -13,8 +13,9 @@ export async function fetchAndShowVacationDays(webid, participants, solidFetch) 
     const $error = document.getElementById('error');
     $error.innerText = `${error.message} (Vacation calendar of ${participants[webid].name} (${webid}))`;
     $error.classList.remove('hidden');
-    //document.querySelector('#find-slots .loader').classList.add('hidden');
+    document.querySelector('#find-slots .loader').classList.add('hidden');
   } else {
+    document.querySelector('#find-slots .loader').classList.add('hidden');
     showVacationDays(days);
   }
 }

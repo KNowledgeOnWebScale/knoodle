@@ -21,12 +21,22 @@ window.onload = async () => {
         url: 'test:dummy1',
         status: 'not-downloaded',
         data: undefined
+      },
+      vacationCalendar: {
+        url: 'test:dummy1-vacation',
+        status: 'not-downloaded',
+        data: undefined
       }
     },
     'dummy2': {
       name: 'Dummy 2',
       availabilityCalendar: {
         url: 'test:dummy2',
+        status: 'not-downloaded',
+        data: undefined
+      },
+      vacationCalendar: {
+        url: 'test:dummy2-vacation',
         status: 'not-downloaded',
         data: undefined
       }
@@ -77,6 +87,7 @@ window.onload = async () => {
     setSelectedParticipantUrls(participants, [webId]);
   });
   document.getElementById('show-vacation-days-btn').addEventListener('click', () => {
+    document.querySelector('#find-slots .loader').classList.remove('hidden');
     const $error = document.getElementById('error');
     $error.classList.add('hidden');
     const urls = getSelectedParticipantWebIDs(participants);
@@ -84,9 +95,11 @@ window.onload = async () => {
     if (urls.length !== 1) {
       $error.innerText = 'Please select exactly 1 participant.';
       $error.classList.remove('hidden');
+      document.querySelector('#find-slots .loader').classList.add('hidden');
     } else if (!participants[urls[0]].vacationCalendar.url) {
       $error.innerText = `This person doesn't have a vacation calendar.`;
       $error.classList.remove('hidden');
+      document.querySelector('#find-slots .loader').classList.add('hidden');
     } else {
       fetchAndShowVacationDays(urls[0], participants, solidFetch);
     }
