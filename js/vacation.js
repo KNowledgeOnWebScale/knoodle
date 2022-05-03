@@ -1,7 +1,13 @@
 import {downloadVacationCalendar, sleep} from "./utils";
 import dayjs from "dayjs";
 
-
+/**
+ * This method fetches and show the vacation days.
+ * @param webid - The WebID for which the vacation days should be fetched and shown.
+ * @param participants - The loaded participants.
+ * @param solidFetch - The (Solid) fetch function used for HTTP calls.
+ * @returns {Promise<void>}
+ */
 export async function fetchAndShowVacationDays(webid, participants, solidFetch) {
   document.getElementById('add-slot').classList.add('hidden');
   document.getElementById('desired-slot-message').classList.add('hidden');
@@ -20,6 +26,13 @@ export async function fetchAndShowVacationDays(webid, participants, solidFetch) 
   }
 }
 
+/**
+ * This function returns the vacation days for a WebID.
+ * @param webid - The WebID from which the vacation days should come.
+ * @param participants - The loaded participants.
+ * @param solidFetch - The (Solid) fetch function used for HTTP calls.
+ * @returns {Promise<{days: undefined, error: undefined}>}
+ */
 async function fetchVacationDays(webid, participants, solidFetch) {
   let error = undefined;
 
@@ -44,6 +57,10 @@ async function fetchVacationDays(webid, participants, solidFetch) {
   return {days, error}
 }
 
+/**
+ * This method shows the vacation days in on the Web page.
+ * @param days - The vacation days.
+ */
 function showVacationDays(days) {
   if (days.length === 0) {
     document.getElementById('no-vacation-days-message').classList.remove('hidden');

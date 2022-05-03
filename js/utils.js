@@ -160,6 +160,11 @@ function getDummyAvailabilityDates(extra = 0) {
   return result;
 }
 
+/**
+ * This function returns 3 dummy vacation days.
+ * @param extra - Normally, the days starts tomorrow, but with this parameter you can shift that. Default is 0.
+ * @returns {{days: *[]}}
+ */
 function getDummyVacationDays(extra = 0) {
   const today = dayjs();
 
@@ -211,6 +216,13 @@ export async function downloadAvailabilityCalendar(webid, participants, solidFet
   console.log(participants[webid]);
 }
 
+/**
+ * This method downloads a vacation calendar.
+ * @param webid - The WebID from which the vacation calendar has to be downloaded.
+ * @param participants - The loaded participants.
+ * @param solidFetch - The (Solid) fetch method to be used for HTTP calls.
+ * @returns {Promise<void>}
+ */
 export async function downloadVacationCalendar(webid, participants, solidFetch) {
   const url = participants[webid].vacationCalendar.url;
 
@@ -257,6 +269,12 @@ export async function downloadVacationCalendar(webid, participants, solidFetch) 
   console.log(participants[webid].vacationCalendar);
 }
 
+/**
+ * This function returns the cleaned up vacation days.
+ * It sanitizes the part of the day and removes vacation days that already have passed.
+ * @param days - The vacation days that need to be cleaned.
+ * @returns {*} - An array of vacation days.
+ */
 function cleanUpVacationDays(days) {
   const today = dayjs();
 
