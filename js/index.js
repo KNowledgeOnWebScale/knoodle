@@ -11,9 +11,10 @@ import {
 } from './participants';
 import {findAndShowSlots} from "./slots";
 import {fetchAndShowVacationDays} from "./vacation";
+import {fetch, handleIncomingRedirect, getDefaultSession, login} from '@inrupt/solid-client-authn-browser';
 
 window.onload = async () => {
-  let solidFetch = solidClientAuthentication.fetch;
+  let solidFetch = fetch;
   const participants = {
     'dummy1': {
       name: 'Dummy 1',
@@ -181,28 +182,26 @@ async function loginAndFetch(oidcIssuer, employeesUrl, participants, solidFetch)
   //      only after it handles the incoming redirect from the Solid Identity Provider.
   //   If the page is not being loaded after a redirect from the Solid Identity Provider,
   //      nothing happens.
-  await solidClientAuthentication.handleIncomingRedirect();
+  await handleIncomingRedirect();
 
   // 2. Start the Login Process if not already logged in.
-  if (!solidClientAuthentication.getDefaultSession().info.isLoggedIn) {
+  if (!getDefaultSession().info.isLoggedIn) {
     if (oidcIssuer) {
       document.getElementById('current-user').classList.add('hidden');
       document.getElementById('webid-form').classList.remove('hidden');
       // The `login()` redirects the user to their identity provider;
       // i.e., moves the user away from the current page.
-      await solidClientAuthentication.login({
+      await login({
         // Specify the URL of the user's Solid Identity Provider; e.g., "https://broker.pod.inrupt.com" or "https://inrupt.net"
         oidcIssuer,
         // Specify the URL the Solid Identity Provider should redirect to after the user logs in,
         // e.g., the current page for a single-page app.
-        redirectUrl: window.location.href,
-        // Pick an application name that will be shown when asked
-        // to approve the application's access to the requested data.
-        clientName: "KNoodle"
+        //redirectUrl: window.location.href,
+        clientId: 'http://localhost:8081/id' //'https://knoodle.knows.idlab.ugent.be/id'
       });
     }
   } else {
-    const webid = solidClientAuthentication.getDefaultSession().info.webId;
+    const webid = getDefaultSession().info.webId;
     const frame = {
       "@context": {
         "@vocab": "http://xmlns.com/foaf/0.1/",

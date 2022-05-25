@@ -1,0 +1,9 @@
+{
+  "@context": "https://www.w3.org/ns/solid/oidc-context.jsonld",
+
+  "client_id": "URL/id",
+  "client_name": "KNoodle",
+  "redirect_uris": ["REDIRECT_URL", "REDIRECT_URL/"],
+  "post_logout_redirect_uris": ["REDIRECT_URL", "REDIRECT_URL/"],
+  "client_uri": "URL"
+}

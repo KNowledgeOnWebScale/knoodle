@@ -4,3 +4,5 @@ node_modules
 /index.js.LICENSE.txt
 /index.js.map
 /faq.js
+id/*
+!/id/index-raw

@@ -6,14 +6,18 @@
     "Ben De Meester (https://ben.de-meester.org)"
   ],
   "scripts": {
-    "prestart": "npx webpack",
+    "prestart": "npm run build:id:prod; npx webpack",
+    "build:id:dev": "sed 's/REDIRECT_URL/http:\\/\\/localhost:8080/g' id/index-raw > id/temp; sed 's/URL/http:\\/\\/localhost:8081/g' id/temp > id/id$.jsonld",
+    "build:id:prod": "sed 's/URL/https:\\/\\/knoodle.knows.idlab.ugent.be/g' id/index-raw > id/id.jsonld",
     "start": "npx http-server .",
-    "watch": "npx webpack serve -c ./webpack.dev.config.js --static ."
+    "start:id": "cd id; npx community-solid-server -c @css:config/file-no-setup.json -p 8081",
+    "watch": "npm run build:id:dev; npx webpack serve -c ./webpack.dev.config.js --static ."
   },
   "devDependencies": {
     "@babel/core": "^7.17.2",
     "@babel/plugin-transform-runtime": "^7.17.0",
     "@babel/preset-env": "^7.16.11",
+    "@solid/community-server": "^4.0.1",
     "http-server": "^14.0.0",
     "node-polyfill-webpack-plugin": "^1.1.4",
     "webpack": "^5.68.0",
@@ -23,6 +27,7 @@
   "private": "true",
   "dependencies": {
     "@babel/runtime": "^7.17.2",
+    "@inrupt/solid-client-authn-browser": "^1.11.7",
     "calendar-link": "^2.1.1",
     "dayjs": "^1.10.7",
     "jsonld": "^5.2.0",
