@@ -9,6 +9,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Added
 - Vacation calendar to FAQ
+- Set up client id (see [issue 23](https://github.com/KNowledgeOnWebScale/knoodle/issues/23))
 
 ## [1.1.0] - 2022-05-03
 
