@@ -6,8 +6,14 @@ by using their availability calendar which is made available through a Solid pod
 
 ## Run locally via HTTP server
 
+### Production
 1. Install dependencies via `npm i`.
-2. Run production HTTP server via `npm start` (this first runs webpack to generate the browser index.js file), OR
+2. Build KNoodle's WebID via `npm run build:id:dev`.
+3. Run production HTTP server via `npm start` (this first runs webpack to generate the browser index.js file)
+
+### Development
+1. Install dependencies via `npm i`.
+2. Start the server hosting the KNoodle's WebID via `npm run start:id`.
 3. Run development HTTP server (that reloads when you make changes) via `npm run watch`
 
 ## Suggested changes for your use case
