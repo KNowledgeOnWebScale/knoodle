@@ -53,14 +53,7 @@ window.onload = async () => {
     const urls = getSelectedParticipantWebIDs(participants);
     console.log(urls);
 
-    if (urls.length < 2) {
-      const $error = document.getElementById('error');
-      $error.innerText = 'Please select at least 2 participants.';
-      $error.classList.remove('hidden');
-      document.querySelector('#find-slots .loader').classList.add('hidden');
-    } else {
-      findAndShowSlots(urls, solidFetch, participants);
-    }
+    findAndShowSlots(urls, solidFetch, participants);
   });
 
   document.getElementById('see-invalid-participants-btn').addEventListener('click', () => {
