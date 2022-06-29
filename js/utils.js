@@ -249,6 +249,11 @@ export async function downloadVacationCalendar(webid, participants, solidFetch) 
 
   try {
     const data = await getRDFasJson(url, frame, solidFetch);
+
+    if (!Array.isArray(data.days)) {
+      data.days = [data.days];
+    }
+
     participants[webid].vacationCalendar.data = cleanUpVacationDays(data.days);
     participants[webid].vacationCalendar.status = 'downloaded';
   } catch (e) {
