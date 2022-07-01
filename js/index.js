@@ -75,6 +75,7 @@ window.onload = async () => {
     clickSelectOIDCIssuerBtn(employeesUrl, participants, solidFetch)
   });
   document.getElementById('show-personal-slots-btn').addEventListener('click', () => {
+    document.getElementById('error').classList.add('hidden');
     const webId = getMostRecentWebID();
     findAndShowSlots([webId], solidFetch, participants);
     setSelectedParticipantUrls(participants, [webId]);

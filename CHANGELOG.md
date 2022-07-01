@@ -12,6 +12,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ### Fixed
 - Error when vacation days is object instead of array
+- Hide old error when showing personal availability slots
 
 ## [1.1.1] - 2022-06-15
 
