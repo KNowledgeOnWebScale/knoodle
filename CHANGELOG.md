@@ -7,6 +7,9 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 
 ## Unreleased
 
+### Added
+- Message to user when checking if already logged in
+
 ### Fixed
 - Error when vacation days is object instead of array
 

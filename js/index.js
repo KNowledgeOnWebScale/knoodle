@@ -193,8 +193,13 @@ async function loginAndFetch(oidcIssuer, employeesUrl, participants, solidFetch)
         // to approve the application's access to the requested data.
         clientName: "KNoodle"
       });
+    } else {
+      document.getElementById('webid-form').classList.remove('hidden');
+      document.getElementById('check-logged-in-message').classList.add('hidden');
     }
   } else {
+    document.getElementById('webid-form').classList.add('hidden');
+    document.getElementById('check-logged-in-message').classList.add('hidden');
     const webid = solidClientAuthentication.getDefaultSession().info.webId;
     const frame = {
       "@context": {
@@ -210,7 +215,6 @@ async function loginAndFetch(oidcIssuer, employeesUrl, participants, solidFetch)
 
     document.getElementById('current-user').innerText = 'Welcome ' + name;
     document.getElementById('current-user').classList.remove('hidden');
-    document.getElementById('webid-form').classList.add('hidden');
     document.getElementById('participants').classList.remove('hidden');
     document.querySelector('#participants .loader').classList.remove('hidden');
 
