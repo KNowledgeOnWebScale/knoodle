@@ -175,7 +175,12 @@ async function loginAndFetch(oidcIssuer, employeesUrl, participants, solidFetch)
   //      only after it handles the incoming redirect from the Solid Identity Provider.
   //   If the page is not being loaded after a redirect from the Solid Identity Provider,
   //      nothing happens.
-  await solidClientAuthentication.handleIncomingRedirect();
+  await solidClientAuthentication.handleIncomingRedirect(
+    {
+      url: window.location.href,
+      restorePreviousSession: true
+    }
+  );
 
   // 2. Start the Login Process if not already logged in.
   if (!solidClientAuthentication.getDefaultSession().info.isLoggedIn) {
