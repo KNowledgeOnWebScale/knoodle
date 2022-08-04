@@ -198,6 +198,11 @@ export async function downloadAvailabilityCalendar(webid, participants, solidFet
     const data = await getRDFasJson(url, frame, solidFetch);
     participants[webid].availabilityCalendar.data = data['@graph'] || data;
     participants[webid].availabilityCalendar.status = 'downloaded';
+
+    // This covers the case when no available slots are present in the response.
+    if (!Array.isArray(participants[webid].availabilityCalendar.data)) {
+      participants[webid].availabilityCalendar.data = [];
+    }
   } catch (e) {
     let error;
 
@@ -249,6 +254,11 @@ export async function downloadVacationCalendar(webid, participants, solidFetch) 
 
   try {
     const data = await getRDFasJson(url, frame, solidFetch);
+
+    if (!Array.isArray(data.days)) {
+      data.days = [data.days];
+    }
+
     participants[webid].vacationCalendar.data = cleanUpVacationDays(data.days);
     participants[webid].vacationCalendar.status = 'downloaded';
   } catch (e) {

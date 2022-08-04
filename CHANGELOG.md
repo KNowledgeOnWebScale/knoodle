@@ -8,8 +8,22 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ## Unreleased
 
 ### Added
+- Message to user when checking if already logged in
+- Restore previous session
+
+### Fixed
+- Error when vacation days is object instead of array
+- Hide old error when showing personal availability slots
+- Error when no availability slots are present for a person
+
+## [1.1.1] - 2022-06-15
+
+### Added
 - Vacation calendar to FAQ
 - Set up client id (see [issue 23](https://github.com/KNowledgeOnWebScale/knoodle/issues/23))
+
+### Changed
+- See slots of a single person (see [issue 24](https://github.com/KNowledgeOnWebScale/knoodle/issues/24))
 
 ## [1.1.0] - 2022-05-03
 
@@ -32,6 +46,7 @@ and this project adheres to [Semantic Versioning](http://semver.org/spec/v2.0.0.
 ### Added
 - Changelog
 
+[1.1.1]: https://github.com/KNowledgeOnWebScale/knoodle/compare/v1.1.0...v1.1.1
 [1.1.0]: https://github.com/KNowledgeOnWebScale/knoodle/compare/v1.0.2...v1.1.0
 [1.0.2]: https://github.com/KNowledgeOnWebScale/knoodle/compare/v1.0.1...v1.0.2
 [1.0.1]: https://github.com/KNowledgeOnWebScale/knoodle/compare/v1.0.0...v1.0.1

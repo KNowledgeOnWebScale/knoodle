@@ -1,14 +1,14 @@
 {
   "name": "knoodle",
-  "version": "1.1.0",
+  "version": "1.1.1",
   "author": "Pieter Heyvaert (https://pieterheyvaert.com)",
   "contributors": [
     "Ben De Meester (https://ben.de-meester.org)"
   ],
   "scripts": {
     "prestart": "npm run build:id:prod; npx webpack",
-    "build:id:dev": "sed 's/REDIRECT_URL/http:\\/\\/localhost:8080/g' id/index-raw > id/temp; sed 's/URL/http:\\/\\/localhost:8081/g' id/temp > id/id$.jsonld",
-    "build:id:prod": "sed 's/URL/https:\\/\\/knoodle.knows.idlab.ugent.be/g' id/index-raw > id/id.jsonld",
+    "build:id:dev": "cat id/index-raw | npx replace REDIRECT_URL http:\\/\\/localhost:8080 -z > id/temp; cat id/temp | npx replace URL http:\\/\\/localhost:8081 -z > id/id$.jsonld",
+    "build:id:prod": "cat id/index-raw | npx replace REDIRECT_URL https:\\/\\/knoodle.knows.idlab.ugent.be -z > id/temp; cat id/temp | npx replace URL https:\\/\\/knoodle.knows.idlab.ugent.be -z > id/id$.jsonld",
     "start": "npx http-server .",
     "start:id": "cd id; npx community-solid-server -c @css:config/file-no-setup.json -p 8081",
     "watch": "npm run build:id:dev; npx webpack serve -c ./webpack.dev.config.js --static ."
@@ -20,6 +20,7 @@
     "@solid/community-server": "^4.0.1",
     "http-server": "^14.0.0",
     "node-polyfill-webpack-plugin": "^1.1.4",
+    "replace": "^1.2.1",
     "webpack": "^5.68.0",
     "webpack-cli": "^4.9.2",
     "webpack-dev-server": "^4.7.4"

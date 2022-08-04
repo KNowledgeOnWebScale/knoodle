@@ -54,14 +54,7 @@ window.onload = async () => {
     const urls = getSelectedParticipantWebIDs(participants);
     console.log(urls);
 
-    if (urls.length < 2) {
-      const $error = document.getElementById('error');
-      $error.innerText = 'Please select at least 2 participants.';
-      $error.classList.remove('hidden');
-      document.querySelector('#find-slots .loader').classList.add('hidden');
-    } else {
-      findAndShowSlots(urls, solidFetch, participants);
-    }
+    findAndShowSlots(urls, solidFetch, participants);
   });
 
   document.getElementById('see-invalid-participants-btn').addEventListener('click', () => {
@@ -83,6 +76,7 @@ window.onload = async () => {
     clickSelectOIDCIssuerBtn(employeesUrl, participants, solidFetch)
   });
   document.getElementById('show-personal-slots-btn').addEventListener('click', () => {
+    document.getElementById('error').classList.add('hidden');
     const webId = getMostRecentWebID();
     findAndShowSlots([webId], solidFetch, participants);
     setSelectedParticipantUrls(participants, [webId]);
@@ -175,33 +169,32 @@ function showOIDCIssuerForm(availableIssuers) {
 }
 
 async function loginAndFetch(oidcIssuer, employeesUrl, participants, solidFetch) {
-  // 1. Call the handleIncomingRedirect() function to complete the authentication process.
-  //   If the page is being loaded after the redirect from the Solid Identity Provider
-  //      (i.e., part of the authentication flow), the user's credentials are stored in-memory, and
-  //      the login process is complete. That is, a session is logged in
-  //      only after it handles the incoming redirect from the Solid Identity Provider.
-  //   If the page is not being loaded after a redirect from the Solid Identity Provider,
-  //      nothing happens.
-  await handleIncomingRedirect();
+  await handleIncomingRedirect(
+    {
+      url: window.location.href,
+      restorePreviousSession: true
+    }
+  );
 
-  // 2. Start the Login Process if not already logged in.
   if (!getDefaultSession().info.isLoggedIn) {
     if (oidcIssuer) {
       document.getElementById('current-user').classList.add('hidden');
       document.getElementById('webid-form').classList.remove('hidden');
-      // The `login()` redirects the user to their identity provider;
-      // i.e., moves the user away from the current page.
+
       await login({
-        // Specify the URL of the user's Solid Identity Provider; e.g., "https://broker.pod.inrupt.com" or "https://inrupt.net"
         oidcIssuer,
-        // Specify the URL the Solid Identity Provider should redirect to after the user logs in,
-        // e.g., the current page for a single-page app.
-        //redirectUrl: window.location.href,
-        clientId: 'http://localhost:8081/id' //'https://knoodle.knows.idlab.ugent.be/id'
+        redirectUrl: CLIENT_ID.replace('/id', ''),
+        clientId: CLIENT_ID
       });
+    } else {
+      document.getElementById('webid-form').classList.remove('hidden');
+      document.getElementById('check-logged-in-message').classList.add('hidden');
     }
   } else {
+    document.getElementById('webid-form').classList.add('hidden');
+    document.getElementById('check-logged-in-message').classList.add('hidden');
     const webid = getDefaultSession().info.webId;
+
     const frame = {
       "@context": {
         "@vocab": "http://xmlns.com/foaf/0.1/",
@@ -216,7 +209,6 @@ async function loginAndFetch(oidcIssuer, employeesUrl, participants, solidFetch)
 
     document.getElementById('current-user').innerText = 'Welcome ' + name;
     document.getElementById('current-user').classList.remove('hidden');
-    document.getElementById('webid-form').classList.add('hidden');
     document.getElementById('participants').classList.remove('hidden');
     document.querySelector('#participants .loader').classList.remove('hidden');
 

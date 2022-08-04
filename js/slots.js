@@ -62,9 +62,11 @@ async function findSlots(webids, participants, solidFetch) {
 function showSlots(slots, participantEmails) {
   if (slots.length === 0) {
     document.getElementById('no-slots-message').classList.remove('hidden');
+    document.getElementById('desired-slot-message').classList.add('hidden');
     document.getElementById('slots').classList.add('hidden');
   } else {
     document.getElementById('no-slots-message').classList.add('hidden');
+    document.getElementById('desired-slot-message').classList.remove('hidden');
     document.getElementById('slots').classList.remove('hidden');
 
     const $tbody = document.querySelector('#slots tbody');
