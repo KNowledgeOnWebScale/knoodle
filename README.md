@@ -1,29 +1,34 @@
-# 🍜 KNoodle
+This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
-KNoodle is KNoWS' Solid-based alternative to Doodle.
-It allows you to find time slots that work for different people,
-by using their availability calendar which is made available through a Solid pod.
+## Getting Started
 
-## Run locally via HTTP server
+First, run the development server:
 
-1. Install dependencies via `npm i`.
-2. Run production HTTP server via `npm start` (this first runs webpack to generate the browser index.js file), OR
-3. Run development HTTP server (that reloads when you make changes) via `npm run watch`
+```bash
+npm run dev
+# or
+yarn dev
+```
 
-## Suggested changes for your use case
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
-1. Update the variable `employeesUrl` in `js/index.js` to point to your list of people that will use KNoodle.
-2. Update the method `fetchParticipantWebIDs` in `js/utils.js` to extract the people from the data that is found at `employeesUrl`.
-3. Update the variable `participants` in `js/index.js` to remove the dummy people.
-4. Update the generated browser index.js file via `npx webpack`.
+You can start editing the page by modifying `pages/index.js`. The page auto-updates as you edit the file.
 
-## Development
+[API routes](https://nextjs.org/docs/api-routes/introduction) can be accessed on [http://localhost:3000/api/hello](http://localhost:3000/api/hello). This endpoint can be edited in `pages/api/hello.js`.
 
-- You find all HTML of the application in `index.html`.
-- You find the frequently asked questions page in the folder `faq`.
-- You find some used libraries in the folder `lib`, most are handled using webpack. To create a development webpack bundle, use `webpack.dev.config.js`.
-- You find all custom JavaScript in the folder `js`.
+The `pages/api` directory is mapped to `/api/*`. Files in this directory are treated as [API routes](https://nextjs.org/docs/api-routes/introduction) instead of React pages.
 
-## License
+## Learn More
 
-This code is copyrighted by [Ghent University – imec](http://idlab.ugent.be/) and released under the [MIT license](http://opensource.org/licenses/MIT).
+To learn more about Next.js, take a look at the following resources:
+
+- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
+- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+
+You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js/) - your feedback and contributions are welcome!
+
+## Deploy on Vercel
+
+The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+
+Check out our [Next.js deployment documentation](https://nextjs.org/docs/deployment) for more details.

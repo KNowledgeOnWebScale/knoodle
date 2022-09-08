@@ -1,33 +1,34 @@
 {
-  "name": "knoodle",
-  "version": "1.1.1",
-  "author": "Pieter Heyvaert (https://pieterheyvaert.com)",
-  "contributors": [
-    "Ben De Meester (https://ben.de-meester.org)"
-  ],
+  "name": "knoodle-react",
+  "version": "0.1.0",
+  "private": true,
   "scripts": {
-    "prestart": "npx webpack",
-    "start": "npx http-server .",
-    "watch": "npx webpack serve -c ./webpack.dev.config.js --static ."
+    "dev": "next dev",
+    "build": "next build",
+    "start": "next start",
+    "lint": "next lint"
   },
-  "devDependencies": {
-    "@babel/core": "^7.17.2",
-    "@babel/plugin-transform-runtime": "^7.17.0",
-    "@babel/preset-env": "^7.16.11",
-    "http-server": "^14.0.0",
-    "node-polyfill-webpack-plugin": "^1.1.4",
-    "webpack": "^5.68.0",
-    "webpack-cli": "^4.9.2",
-    "webpack-dev-server": "^4.7.4"
-  },
-  "private": "true",
   "dependencies": {
-    "@babel/runtime": "^7.17.2",
-    "calendar-link": "^2.1.1",
-    "dayjs": "^1.10.7",
-    "jsonld": "^5.2.0",
-    "rdf-parse": "^1.9.1",
+    "@emotion/react": "^11.10.0",
+    "@emotion/styled": "^11.10.0",
+    "@inrupt/solid-client-authn-browser": "^1.12.2",
+    "@inrupt/solid-ui-react": "^2.8.0",
+    "@mui/icons-material": "^5.8.4",
+    "@mui/material": "^5.9.3",
+    "@mui/x-date-pickers": "^5.0.0-beta.7",
+    "calendar-link": "^2.2.0",
+    "dayjs": "^1.11.4",
+    "jsonld": "^6.0.0",
+    "moment": "^2.29.4",
+    "n3": "^1.16.2",
+    "next": "12.2.3",
+    "react": "18.2.0",
+    "react-big-calendar": "^1.5.0",
+    "react-dom": "18.2.0",
     "readable-web-to-node-stream": "^3.0.2"
   },
-  "license": "MIT"
+  "devDependencies": {
+    "eslint": "8.21.0",
+    "eslint-config-next": "12.2.3"
+  }
 }
