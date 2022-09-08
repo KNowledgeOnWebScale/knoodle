@@ -1,5 +1,4 @@
 import React, { useState, useEffect } from "react";
-import { useRouter } from "next/router";
 import { LoginButton } from "@inrupt/solid-ui-react";
 import Typography from "@mui/material/Typography";
 import Button from "@mui/material/Button";
@@ -9,6 +8,8 @@ import FormControl from "@mui/material/FormControl";
 import Select from "@mui/material/Select";
 import Container from "@mui/material/Container";
 import Stack from "@mui/material/Stack";
+import TextField from "@mui/material/TextField";
+import Box from "@mui/material/Box";
 
 const providers = [
   { title: "Inrupt Pod Spaces", url: "https://broker.pod.inrupt.com/" },
@@ -20,7 +21,6 @@ const providers = [
 ];
 
 export default function Login() {
-  const router = useRouter();
   const [currentUrl, setCurrentUrl] = useState("https://localhost:3000");
   const [provider, setProvider] = useState("");
 
@@ -41,7 +41,7 @@ export default function Login() {
           noWrap
           sx={{ flex: 1 }}
         >
-          Select your pod provider
+          Select your pod provider or input custom server
         </Typography>
         <Stack spacing={2} direction="row" sx={{ mt: 2 }}>
           <FormControl sx={{ minWidth: 200 }}>
@@ -64,6 +64,17 @@ export default function Login() {
               ))}
             </Select>
           </FormControl>
+          <Box display="flex" alignItems="center" justifyContent="center">
+            or
+          </Box>
+          <TextField
+            id="outlined-basic"
+            label="Custom URL"
+            variant="outlined"
+            onChange={(event) => {
+              setProvider(event.target.value);
+            }}
+          />
           <LoginButton
             authOptions={{ clientName: "solid calendar" }}
             oidcIssuer={provider}
