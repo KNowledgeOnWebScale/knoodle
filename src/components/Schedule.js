@@ -7,6 +7,7 @@ import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import CustomTimePicker from "./TimePicker";
 import CustomCalendar from "./CustomCalendar";
+import CustomAlert from "./Alert";
 import { intersect } from "../utils/dates";
 import { fetchContacts } from "../utils/participantsHelper";
 import {
@@ -54,6 +55,9 @@ export default function Schedule() {
   const [vacationEvents, setVacationEvents] = useState([]);
   const [startTime, setStartTime] = useState(new Date());
   const [endTime, setEndTime] = useState(new Date());
+  const [showVacationAlert, setVacationAlert] = useState(false);
+  const [showNoContactAlert, setNoContactAlert] = useState(false);
+  const [showDownloadAlert, setDownloadAlert] = useState(false);
 
   const clickEvent = (e) => {
     let { start, end } = e;
@@ -86,10 +90,24 @@ export default function Schedule() {
         end: new Date(e["date"]),
       });
     }
+    setAvailableEvents([]);
     setVacationEvents(events);
   };
 
   const showVacation = async () => {
+    if (selectedParticipants.length == 0) {
+      setNoContactAlert(true);
+      return;
+    } else {
+      setNoContactAlert(false);
+    }
+    if (selectedParticipants.length != 1) {
+      setVacationAlert(true);
+      return;
+    } else {
+      setVacationAlert(false);
+    }
+
     let error = await downloadSelectedVacation(
       selectedParticipants,
       participants,
@@ -101,10 +119,19 @@ export default function Schedule() {
     if (!error) {
       days = participants[webid].vacationCalendar.data;
       createVacationEvents(days);
+      setDownloadAlert(false);
+    } else {
+      setDownloadAlert(true);
     }
   };
 
   const showAvailability = async () => {
+    if (selectedParticipants.length == 0) {
+      setNoContactAlert(true);
+      return;
+    } else {
+      setNoContactAlert(false);
+    }
     let { calendars, error } = await downloadSelectedAvailability(
       selectedParticipants,
       participants,
@@ -119,8 +146,10 @@ export default function Schedule() {
         slots = calendars[0];
       }
       createAvailabilityEvents(slots);
+      setDownloadAlert(false);
     } else {
-      console.log("Download error: ", e);
+      console.error("Download error: ", error);
+      setDownloadAlert(true);
     }
   };
 
@@ -130,6 +159,24 @@ export default function Schedule() {
         <Box height="100vh" width="100%" display="flex">
           <Grid container spacing={4}>
             <Grid item xs={9}>
+              <CustomAlert
+                severity="info"
+                message="Something went wrong when downloading contact data..."
+                showAlert={showDownloadAlert}
+                setAlert={setDownloadAlert}
+              />
+              <CustomAlert
+                severity="info"
+                message="Select a contact to check availability/holiday"
+                showAlert={showNoContactAlert}
+                setAlert={setNoContactAlert}
+              />
+              <CustomAlert
+                severity="info"
+                message="Choose exactly 1 contact to display their holiday days"
+                showAlert={showVacationAlert}
+                setAlert={setVacationAlert}
+              />
               <Stack
                 spacing={2}
                 direction="row"

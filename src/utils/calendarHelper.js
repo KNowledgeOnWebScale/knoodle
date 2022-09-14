@@ -27,6 +27,7 @@ export async function downloadSelectedAvailability(
       }
     } catch (e) {
       console.log(e);
+      error = "Could not download availability calendar";
     }
 
     if (participants[webid].availabilityCalendar.status === "download-failed") {
@@ -57,11 +58,13 @@ export async function downloadSelectedVacation(
       await downloadVacationCalendar(webid, participants, solidFetch);
     }
   } catch (e) {
-    console.log("Could not download vacation calendar.");
+    error = "Could not download vacation calendar.";
   }
 
   if (participants[webid].vacationCalendar.status === "download-failed") {
-    error = participants[webid].vacationCalendar.error;
+    error =
+      participants[webid].vacationCalendar.error ||
+      "Could not download vacation calendar.";
   }
 
   return error;

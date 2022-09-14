@@ -20,10 +20,10 @@ export default function Home() {
         "@id": webID,
       };
 
-      const result = (async () => {
-        await getRDFasJson(webID, frame, fetch);
+      (async () => {
+        const data = await getRDFasJson(webID, frame, fetch);
+        setName(getPersonName(data) || webID);
       })();
-      setName(getPersonName(result) || webID);
     }
   }, [session.info.webId]);
 

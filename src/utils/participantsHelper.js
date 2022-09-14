@@ -153,7 +153,9 @@ export function getPersonName(person) {
     if (Array.isArray(person.name)) {
       return person.name[0]["@value"];
     } else {
-      return person.name["@value"];
+      if (person.name["@value"]) {
+        return person.name["@value"];
+      } else return person.name;
     }
   } else if (person.givenName) {
     if (Array.isArray(person.givenName)) {

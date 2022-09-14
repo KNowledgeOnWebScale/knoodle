@@ -34,7 +34,7 @@ function CustomDrawer(props) {
         <Toolbar />
         <Box sx={{ overflow: "auto" }}>
           <List>
-            {["Homepage", "Availability", "Schedule Meeting", "Meetings"].map(
+            {["Homepage", "Availability", "Schedule Meeting"].map(
               (text, index) => (
                 <ListItem key={text} disablePadding>
                   <ListItemButton
@@ -49,7 +49,7 @@ function CustomDrawer(props) {
                       {index === 0 && <HomeIcon />}
                       {index === 1 && <EventAvailableIcon />}
                       {index === 2 && <GroupsIcon />}
-                      {index === 3 && <ContactsIcon />}
+                      {/* {index === 3 && <ContactsIcon />} */}
                     </ListItemIcon>
                     <ListItemText primary={text} />
                   </ListItemButton>
