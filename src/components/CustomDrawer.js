@@ -1,7 +1,7 @@
 import * as React from "react";
 import Toolbar from "@mui/material/Toolbar";
 import EventAvailableIcon from "@mui/icons-material/EventAvailable";
-import ContactsIcon from "@mui/icons-material/Contacts";
+import SettingsIcon from "@mui/icons-material/Settings";
 import GroupsIcon from "@mui/icons-material/Groups";
 import HomeIcon from "@mui/icons-material/Home";
 import Box from "@mui/material/Box";
@@ -34,28 +34,31 @@ function CustomDrawer(props) {
         <Toolbar />
         <Box sx={{ overflow: "auto" }}>
           <List>
-            {["Homepage", "Availability", "Schedule Meeting"].map(
-              (text, index) => (
-                <ListItem key={text} disablePadding>
-                  <ListItemButton
-                    onClick={() => {
-                      if (text == "Homepage") router.push("/");
-                      else if (text == "Schedule Meeting")
-                        router.push("/schedule-meeting");
-                      else router.push("/" + text.toLowerCase());
-                    }}
-                  >
-                    <ListItemIcon>
-                      {index === 0 && <HomeIcon />}
-                      {index === 1 && <EventAvailableIcon />}
-                      {index === 2 && <GroupsIcon />}
-                      {/* {index === 3 && <ContactsIcon />} */}
-                    </ListItemIcon>
-                    <ListItemText primary={text} />
-                  </ListItemButton>
-                </ListItem>
-              )
-            )}
+            {[
+              "Homepage",
+              "Availability",
+              "Schedule Meeting",
+              "Configuration",
+            ].map((text, index) => (
+              <ListItem key={text} disablePadding>
+                <ListItemButton
+                  onClick={() => {
+                    if (text == "Homepage") router.push("/");
+                    else if (text == "Schedule Meeting")
+                      router.push("/schedule-meeting");
+                    else router.push("/" + text.toLowerCase());
+                  }}
+                >
+                  <ListItemIcon>
+                    {index === 0 && <HomeIcon />}
+                    {index === 1 && <EventAvailableIcon />}
+                    {index === 2 && <GroupsIcon />}
+                    {index === 3 && <SettingsIcon />}
+                  </ListItemIcon>
+                  <ListItemText primary={text} />
+                </ListItemButton>
+              </ListItem>
+            ))}
           </List>
         </Box>
       </Drawer>
