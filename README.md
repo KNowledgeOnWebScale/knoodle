@@ -1,28 +1,33 @@
 # 🍜 KNoodle
 
-KNoodle is KNoWS' Solid-based alternative to Doodle.
-It allows you to find time slots that work for different people,
+KNoodle is KNoWS' (and OxfordHCC's) Solid-based alternative to Doodle It allows you to find time slots that work for different people,
 by using their availability calendar which is made available through a Solid pod.
 
-## Run locally via HTTP server
+This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next-app`](https://github.com/vercel/next.js/tree/canary/packages/create-next-app).
 
-1. Install dependencies via `npm i`.
-2. Run production HTTP server via `npm start` (this first runs webpack to generate the browser index.js file), OR
-3. Run development HTTP server (that reloads when you make changes) via `npm run watch`
+## Local development
+
+First, run the development server:
+
+```bash
+npm run dev
+# or
+yarn dev
+```
+
+Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
 
 ## Suggested changes for your use case
 
-1. Update the variable `employeesUrl` in `js/index.js` to point to your list of people that will use KNoodle.
-2. Update the method `fetchParticipantWebIDs` in `js/utils.js` to extract the people from the data that is found at `employeesUrl`.
-3. Update the variable `participants` in `js/index.js` to remove the dummy people.
-4. Update the generated browser index.js file via `npx webpack`.
+1. Update the variable `employeesUrl` in `src/utils/participantsHelper.js` to point to your list of people that will use KNoodle.
+2. Update the method `fetchParticipantWebIDs` in `src/utils/participantsHelper.js` to extract the people from the data that is found at `employeesUrl`.
+3. Update the variable `participants` in `src/components/Schedule.js` to remove the dummy people.
 
 ## Development
 
-- You find all HTML of the application in `index.html`.
-- You find the frequently asked questions page in the folder `faq`.
-- You find some used libraries in the folder `lib`, most are handled using webpack. To create a development webpack bundle, use `webpack.dev.config.js`.
-- You find all custom JavaScript in the folder `js`.
+- All of the react components are found under `src/components/` and `src/pages/`
+- `src/utils/` contains code for data fetching and manipulation
+- `src/data/` contains dummy data for the calendar component which can be ignored
 
 ## License
 
