@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid";
 import PeopleDrawer from "../components/PeopleDrawer";
+import { useUrl } from "../context/UrlContext";
 import { useSession } from "@inrupt/solid-ui-react";
 import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
@@ -47,6 +48,7 @@ const participants = {
 export default function Schedule() {
   const { session } = useSession();
   const solidFetch = session.fetch;
+  const [contactUrl, setContactUrl] = useUrl();
 
   const [validParticipants, setValidParticipants] = useState([]);
   const [invalidParticipants, setInvalidParticipants] = useState([]);
@@ -220,14 +222,15 @@ export default function Schedule() {
 
             <Grid item xs={3}>
               <PeopleDrawer
-                getContacts={() =>
+                getContacts={() => {
                   fetchContacts(
                     participants,
                     solidFetch,
                     setValidParticipants,
-                    setInvalidParticipants
-                  )
-                }
+                    setInvalidParticipants,
+                    contactUrl
+                  );
+                }}
                 validParticipants={validParticipants}
                 invalidParticipants={invalidParticipants}
                 selectedParticipants={selectedParticipants}

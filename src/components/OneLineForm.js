@@ -4,10 +4,11 @@ import TextField from "@mui/material/TextField";
 import Box from "@mui/material/Box";
 import Grid from "@mui/material/Grid";
 
-export default function OneLineForm({ id, label }) {
+export default function OneLineForm({ id, label, trigger }) {
   const handleSubmit = (event) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
+    trigger(data.get(id));
     console.log({
       id: data.get(id),
     });

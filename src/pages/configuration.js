@@ -1,12 +1,20 @@
 import SignUpForm from "../components/SignUpForm";
 import OneLineForm from "../components/OneLineForm";
+import { useUrl } from "../context/UrlContext";
 
 export default function Meetings() {
+  const [url, setUrl] = useUrl();
+
+  const updateUrl = (url) => {
+    console.log("updating...", url);
+    setUrl(url);
+  };
+
   return (
     <>
       <h3>Knoodle configurations</h3>
       <p>Change contacts URL:</p>
-      <OneLineForm id="url" label="URL" />
+      <OneLineForm id="url" label="URL" trigger={updateUrl} />
       <p>
         Don't have an availability calendar yet? Allow knoodle to fetch
         availability calendar from google and store it into your pod:

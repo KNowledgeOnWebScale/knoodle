@@ -6,23 +6,26 @@ import CustomDrawer from "../components/CustomDrawer";
 import Toolbar from "@mui/material/Toolbar";
 import CssBaseline from "@mui/material/CssBaseline";
 import Box from "@mui/material/Box";
+import { UrlProvider } from "../context/UrlContext";
 
 function MyApp({ Component, pageProps }) {
   return (
-    <SessionProvider restorePreviousSession={true}>
-      <Head>
-        <title>Solid Calendar</title>
-      </Head>
-      <Box sx={{ display: "flex" }}>
-        <CssBaseline />
-        <Header title="Solid Calendar" />
-        <CustomDrawer />
-        <Box sx={{ flexGrow: 1, pt: 3, pl: 3 }}>
-          <Toolbar />
-          <Component {...pageProps} />
+    <UrlProvider>
+      <SessionProvider restorePreviousSession={true}>
+        <Head>
+          <title>Solid Calendar</title>
+        </Head>
+        <Box sx={{ display: "flex" }}>
+          <CssBaseline />
+          <Header title="Solid Calendar" />
+          <CustomDrawer />
+          <Box sx={{ flexGrow: 1, pt: 3, pl: 3 }}>
+            <Toolbar />
+            <Component {...pageProps} />
+          </Box>
         </Box>
-      </Box>
-    </SessionProvider>
+      </SessionProvider>
+    </UrlProvider>
   );
 }
 

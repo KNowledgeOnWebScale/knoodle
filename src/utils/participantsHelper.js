@@ -4,11 +4,9 @@ export async function fetchContacts(
   participants,
   solidFetch,
   setValidParticipants,
-  setInvalidParticipants
+  setInvalidParticipants,
+  employeesUrl
 ) {
-  const employeesUrl =
-    "https://data.knows.idlab.ugent.be/person/office/employees.ttl";
-
   await fetchParticipantWebIDs(employeesUrl, participants, solidFetch);
   console.log("All participants' WebIDs fetched (without data).");
   await fetchDataOfParticipants(
