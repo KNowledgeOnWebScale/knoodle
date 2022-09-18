@@ -3,14 +3,32 @@ import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import Box from "@mui/material/Box";
 
-export default function SignUpForm() {
-  const handleSubmit = (event) => {
+export default function SignUpForm({ webid }) {
+  const handleSubmit = async (event) => {
     event.preventDefault();
+
     const data = new FormData(event.currentTarget);
-    console.log({
-      email: data.get("email"),
-      password: data.get("password"),
+    let email = data.get("email");
+    let password = data.get("password");
+
+    const response = await fetch("/api/generate-token", {
+      method: "POST",
+      // headers: {
+      //   Authentication:
+      //     "Basic " + Buffer.from(email + ":" + password).toString("base64"),
+      // },
+      // The email/password fields are those of your account.
+      // The name field will be used when generating the ID of your token.
+      body: JSON.stringify({
+        webid: webid,
+        email: email,
+        password: password,
+        name: "my-token",
+      }),
     });
+
+    const response_text = await response.json();
+    console.log(response_text);
   };
 
   return (
