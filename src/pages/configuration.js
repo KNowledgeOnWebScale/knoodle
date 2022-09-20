@@ -13,6 +13,19 @@ export default function Meetings() {
     setUrl(url);
   };
 
+  const updateIcs = async (ics) => {
+    const response = await fetch("/api/update-ics", {
+      method: "PUT",
+      body: JSON.stringify({
+        ics: ics,
+        webid: webID,
+      }),
+    });
+
+    const response_text = await response.json();
+    console.log(response_text);
+  };
+
   return (
     <>
       {session.info.isLoggedIn && (
@@ -33,7 +46,7 @@ export default function Meetings() {
             2. Enter your secret address in iCal format:
             (https://support.google.com/calendar/answer/37648#private&zippy=%2Cget-your-calendar-view-only)
           </p>
-          <OneLineForm id="secret" label="Secret Address" />
+          <OneLineForm id="secret" label="Secret Address" trigger={updateIcs} />
         </>
       )}
     </>

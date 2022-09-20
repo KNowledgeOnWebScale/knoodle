@@ -11,8 +11,9 @@ datasource db {
 }
 
 model User {
-  id           String @id @default(cuid())
-  webid        String @unique
-  token_id     String
-  token_secret String
+  id           String  @id @default(cuid())
+  webid        String  @unique
+  token_id     String?
+  token_secret String?
+  ics_url      String?
 }
