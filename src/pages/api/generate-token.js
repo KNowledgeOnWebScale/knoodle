@@ -2,9 +2,9 @@ import fetch from "node-fetch";
 import prisma from "../../../lib/prisma";
 
 export default async function handler(request, response) {
-  let { email, password, webid } = JSON.parse(request.body);
+  let { email, password, webid, issuer } = JSON.parse(request.body);
 
-  const token_response = await fetch("http://localhost:3000/idp/credentials/", {
+  const token_response = await fetch(issuer + "idp/credentials/", {
     method: "POST",
     headers: { "content-type": "application/json" },
     // The email/password fields are those of your account.

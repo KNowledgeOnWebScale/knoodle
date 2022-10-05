@@ -3,7 +3,7 @@ import Button from "@mui/material/Button";
 import TextField from "@mui/material/TextField";
 import Box from "@mui/material/Box";
 
-export default function SignUpForm({ webid }) {
+export default function SignUpForm({ webid, issuer }) {
   const handleSubmit = async (event) => {
     event.preventDefault();
 
@@ -23,6 +23,7 @@ export default function SignUpForm({ webid }) {
         webid: webid,
         email: email,
         password: password,
+        issuer: issuer,
         name: "my-token",
       }),
     });
