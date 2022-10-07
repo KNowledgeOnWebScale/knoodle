@@ -30,6 +30,10 @@ export async function downloadSelectedAvailability(
       error = "Could not download availability calendar";
     }
 
+    if (Object.keys(participants[webid]).length === 0) {
+      return { calendars: null, error: null };
+    }
+
     if (participants[webid].availabilityCalendar.status === "download-failed") {
       error = participants[webid].availabilityCalendar.error;
       break;

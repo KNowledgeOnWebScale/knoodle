@@ -38,7 +38,7 @@ export default async function handler(request, response) {
     let authFetch = await getAccessToken(id, secret, issuer);
     const calendarRdf = await convertIcsToRdf(ics);
 
-    updateAvailability(webid, authFetch, calendarRdf);
+    await updateAvailability(webid, authFetch, calendarRdf);
     //console.log(calendarJson);
     //console.log(JSON.stringify(calendarJson));
     response.status(200).json(calendarRdf);
@@ -50,6 +50,32 @@ export default async function handler(request, response) {
   // response.status(200).json(result);
 }
 
+const updatePodAvailabilityPut = async (availabilityUrl, authFetch, rdf) => {
+  const response = await authFetch(availabilityUrl, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "text/turtle",
+    },
+    body: rdf,
+  });
+};
+
+const updateWebIdAvailability = async (availabilityUrl, webID, authFetch) => {
+  const response = await authFetch(webID, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/sparql-update",
+    },
+    body: `
+    PREFIX schema: <http://schema.org/>
+    PREFIX knows: <https://data.knows.idlab.ugent.be/person/office/#>
+    INSERT DATA {
+      <#me> knows:hasAvailabilityCalendar <#availability-calendar>.
+      <#availability-calendar> schema:url "${availabilityUrl}".
+   }`,
+  });
+};
+
 const updateAvailability = async (webID, authFetch, rdf) => {
   const temp_webID = "http://localhost:3000/profile/card#me";
   const mypods = await getPodUrlAll(webID, { fetch: authFetch });
@@ -57,6 +83,7 @@ const updateAvailability = async (webID, authFetch, rdf) => {
   const SELECTED_POD = mypods[0];
   const availabilityUrl = `${SELECTED_POD}availability`;
   console.log(availabilityUrl);
+  console.log(rdf);
 
   // Fetch or create a new availability calendar
   let myAvailabilityCalendar;
@@ -83,46 +110,49 @@ const updateAvailability = async (webID, authFetch, rdf) => {
     }
   }
 
-  // Add titles to the Dataset
-  let i = 0;
-  temp_data.forEach((title) => {
-    if (title.trim() !== "") {
-      let item = createThing({ name: "title" + i });
-      item = addUrl(item, RDF.type, AS.Article);
-      item = addStringNoLocale(item, SCHEMA_INRUPT.name, title);
-      myAvailabilityCalendar = setThing(myAvailabilityCalendar, item);
-      i++;
-    }
-  });
+  // // Add titles to the Dataset
+  // let i = 0;
+  // temp_data.forEach((title) => {
+  //   if (title.trim() !== "") {
+  //     let item = createThing({ name: "title" + i });
+  //     item = addUrl(item, RDF.type, AS.Article);
+  //     item = addStringNoLocale(item, SCHEMA_INRUPT.name, title);
+  //     myAvailabilityCalendar = setThing(myAvailabilityCalendar, item);
+  //     i++;
+  //   }
+  // });
 
-  try {
-    // Save the SolidDataset
-    let savedAvailabilityCalendar = await saveSolidDatasetAt(
-      availabilityUrl,
-      myAvailabilityCalendar,
-      { fetch: authFetch }
-    );
+  await updatePodAvailabilityPut(availabilityUrl, authFetch, rdf);
+  await updateWebIdAvailability(availabilityUrl, webID, authFetch);
 
-    // Refetch the Reading List
-    savedAvailabilityCalendar = await getSolidDataset(availabilityUrl, {
-      fetch: authFetch,
-    });
+  // try {
+  //   // Save the SolidDataset
+  //   let savedAvailabilityCalendar = await saveSolidDatasetAt(
+  //     availabilityUrl,
+  //     myAvailabilityCalendar,
+  //     { fetch: authFetch }
+  //   );
 
-    let items = getThingAll(savedAvailabilityCalendar);
+  //   // Refetch the Reading List
+  //   savedAvailabilityCalendar = await getSolidDataset(availabilityUrl, {
+  //     fetch: authFetch,
+  //   });
 
-    let listcontent = "";
-    for (let i = 0; i < items.length; i++) {
-      let item = getStringNoLocale(items[i], SCHEMA_INRUPT.name);
-      if (item !== null) {
-        listcontent += item + "\n";
-      }
-    }
+  //   let items = getThingAll(savedAvailabilityCalendar);
 
-    console.log("fetched from solid pod: ");
-    console.log(listcontent);
-  } catch (error) {
-    console.log(error);
-  }
+  //   let listcontent = "";
+  //   for (let i = 0; i < items.length; i++) {
+  //     let item = getStringNoLocale(items[i], SCHEMA_INRUPT.name);
+  //     if (item !== null) {
+  //       listcontent += item + "\n";
+  //     }
+  //   }
+
+  //   console.log("fetched from solid pod: ");
+  //   console.log(listcontent);
+  // } catch (error) {
+  //   console.log(error);
+  // }
 };
 
 const getAccessToken = async (id, secret, issuer) => {

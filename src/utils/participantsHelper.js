@@ -7,9 +7,14 @@ export async function fetchContacts(
   setInvalidParticipants,
   employeesUrl
 ) {
-  await fetchParticipantWebIDs(employeesUrl, participants, solidFetch);
-  console.log("All participants' WebIDs fetched (without data).");
-  await fetchDataOfParticipants(
+  const fetchedWebIds = await fetchWebIDs(employeesUrl, solidFetch);
+  fetchedWebIds.forEach((id) => {
+    participants[id] = {};
+  });
+
+  console.info("All participants' WebIDs fetched (without data).");
+
+  await fetchParticipantWebIdData(
     participants,
     solidFetch,
     setValidParticipants,
@@ -19,11 +24,7 @@ export async function fetchContacts(
   console.log(participants);
 }
 
-export async function fetchParticipantWebIDs(
-  employeesUrl,
-  participants,
-  fetch
-) {
+export async function fetchWebIDs(employeesUrl, fetch) {
   const frame = {
     "@context": {
       "@vocab": "http://schema.org/",
@@ -36,14 +37,10 @@ export async function fetchParticipantWebIDs(
   console.log(result);
   const ids = result.employee.map((a) => a["@id"]);
 
-  ids.forEach((id) => {
-    participants[id] = {};
-  });
-
-  return participants;
+  return ids;
 }
 
-export async function fetchDataOfParticipants(
+export async function fetchParticipantWebIdData(
   participants,
   fetch,
   setValid,
@@ -69,8 +66,6 @@ export async function fetchDataOfParticipants(
           "@id": id,
         };
 
-        // hack
-        //console.log("curr webid:", id);
         if (
           id === "https://elsdvlee.pod.knows.idlab.ugent.be/profile/card#me"
         ) {
@@ -130,7 +125,9 @@ export async function fetchDataOfParticipants(
     let item = {};
     item["name"] = participant.name || id;
     item["id"] = id;
-
+    if (Object.keys(participant).length === 0) {
+      return;
+    }
     if (participant.error || !participant.availabilityCalendar.url) {
       if (participant.error) {
         item["error"] = "(Error: " + participant.error + ")";
@@ -138,10 +135,14 @@ export async function fetchDataOfParticipants(
         item["error"] = " (No availability calendar found.)";
       }
       invalidList = [...invalidList, item];
-      setInvalid(invalidList);
+      if (setInvalid) {
+        setInvalid(invalidList);
+      }
     } else {
       validList = [...validList, item];
-      setValid(validList);
+      if (setValid) {
+        setValid(validList);
+      }
     }
   }
 }

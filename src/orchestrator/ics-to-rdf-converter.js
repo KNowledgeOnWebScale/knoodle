@@ -26,7 +26,7 @@ TRANSP:OPAQUE
 END:VEVENT
 END:VCALENDAR`;
 
-  const data = event; //await response.text();
+  const data = await response.text();
 
   const jcalData = ICAL.parse(data);
   let events = [];
