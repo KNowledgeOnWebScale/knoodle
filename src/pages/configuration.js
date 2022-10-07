@@ -4,6 +4,7 @@ import { useUrl } from "../context/UrlContext";
 import { useSession } from "@inrupt/solid-ui-react";
 import Button from "@mui/material/Button";
 import { getRDFasJson } from "../utils/fetchHelper";
+import Box from "@mui/material/Box";
 import { useEffect, useState } from "react";
 
 export default function Meetings() {
@@ -87,7 +88,17 @@ export default function Meetings() {
             (https://support.google.com/calendar/answer/37648#private&zippy=%2Cget-your-calendar-view-only)
           </p>
           <OneLineForm id="secret" label="Secret Address" trigger={updateIcs} />
-          <Button onClick={updateAvailability}>Update Availability</Button>
+          <Box
+            sx={{
+              mx: 4,
+              my: 5,
+              display: "flex",
+              flexDirection: "column",
+              alignItems: "center",
+            }}
+          >
+            <Button onClick={updateAvailability}>Update Availability</Button>
+          </Box>
         </>
       )}
     </>

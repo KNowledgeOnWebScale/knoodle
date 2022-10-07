@@ -7,6 +7,7 @@ import HomeIcon from "@mui/icons-material/Home";
 import Box from "@mui/material/Box";
 import Drawer from "@mui/material/Drawer";
 import List from "@mui/material/List";
+import { useSession } from "@inrupt/solid-ui-react";
 import ListItem from "@mui/material/ListItem";
 import ListItemButton from "@mui/material/ListItemButton";
 import ListItemIcon from "@mui/material/ListItemIcon";
@@ -16,7 +17,13 @@ import { useRouter } from "next/router";
 const drawerWidth = 200;
 
 function CustomDrawer(props) {
+  const { session } = useSession();
   const router = useRouter();
+  let pagesName = ["Homepage", "Availability", "Schedule Meeting"];
+
+  if (session.info.isLoggedIn) {
+    pagesName.push("Configuration");
+  }
 
   return (
     <React.Fragment>
@@ -34,12 +41,7 @@ function CustomDrawer(props) {
         <Toolbar />
         <Box sx={{ overflow: "auto" }}>
           <List>
-            {[
-              "Homepage",
-              "Availability",
-              "Schedule Meeting",
-              "Configuration",
-            ].map((text, index) => (
+            {pagesName.map((text, index) => (
               <ListItem key={text} disablePadding>
                 <ListItemButton
                   onClick={() => {

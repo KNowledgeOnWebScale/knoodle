@@ -5,27 +5,6 @@ const md5 = require("md5");
 
 async function IcsToJson(ics) {
   const response = await fetch(ics);
-  const event = `BEGIN:VCALENDAR
-PRODID:-//Google Inc//Google Calendar 70.9054//EN
-VERSION:2.0
-CALSCALE:GREGORIAN
-METHOD:PUBLISH
-X-WR-CALNAME:Test for Solid calendar
-X-WR-TIMEZONE:Europe/Brussels
-BEGIN:VEVENT
-DTSTART:20210408T150000Z
-DTEND:20210408T170000Z
-DTSTAMP:20210618T121947Z
-UID:04jkkr8hoj6jdcc5ikrrhk2c5o@google.com
-CREATED:20210408T124806Z
-LAST-MODIFIED:20210408T124806Z
-SEQUENCE:0
-STATUS:CONFIRMED
-SUMMARY:Correctly converted
-TRANSP:OPAQUE
-END:VEVENT
-END:VCALENDAR`;
-
   const data = await response.text();
 
   const jcalData = ICAL.parse(data);
