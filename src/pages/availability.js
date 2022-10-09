@@ -1,6 +1,7 @@
 import CustomCalendar from "../components/CustomCalendar";
 import { fetchParticipantWebIdData } from "../utils/participantsHelper";
 import { downloadSelectedAvailability } from "../utils/calendarHelper";
+import { createAvailabilityEvents } from "../utils/calendarHelper";
 import { useSession } from "@inrupt/solid-ui-react";
 import Box from "@mui/material/Box";
 import { useEffect, useState } from "react";
@@ -11,20 +12,6 @@ export default function Availability() {
   const webId = session.info.webId;
   const participants = {};
   const [availableEvents, setAvailableEvents] = useState([]);
-
-  const createAvailabilityEvents = (slots) => {
-    let events = [];
-    for (let e of slots) {
-      events.push({
-        title: "Available",
-        type: "availability",
-        start: new Date(e["startDate"]),
-        end: new Date(e["endDate"]),
-      });
-    }
-    console.log(events);
-    setAvailableEvents(events);
-  };
 
   useEffect(() => {
     async function getAvailability() {
@@ -38,7 +25,7 @@ export default function Availability() {
       );
 
       if (Object.keys(participants[webId]).length != 0) {
-        createAvailabilityEvents(calendars[0]);
+        createAvailabilityEvents(calendars[0], setAvailableEvents, null);
       }
     }
     getAvailability();

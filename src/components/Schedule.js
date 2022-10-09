@@ -11,6 +11,7 @@ import CustomCalendar from "./CustomCalendar";
 import CustomAlert from "./Alert";
 import { intersect } from "../utils/dates";
 import { fetchContacts } from "../utils/participantsHelper";
+import { createAvailabilityEvents } from "../utils/calendarHelper";
 import {
   downloadSelectedAvailability,
   downloadSelectedVacation,
@@ -65,20 +66,6 @@ export default function Schedule() {
     let { start, end } = e;
     setStartTime(start);
     setEndTime(end);
-  };
-
-  const createAvailabilityEvents = (slots) => {
-    let events = [];
-    for (let e of slots) {
-      events.push({
-        title: "Available",
-        type: "availability",
-        start: new Date(e["startDate"]),
-        end: new Date(e["endDate"]),
-      });
-    }
-    setVacationEvents([]);
-    setAvailableEvents(events);
   };
 
   const createVacationEvents = (slots) => {
@@ -147,7 +134,7 @@ export default function Schedule() {
       } else {
         slots = calendars[0];
       }
-      createAvailabilityEvents(slots);
+      createAvailabilityEvents(slots, setAvailableEvents, setVacationEvents);
       setDownloadAlert(false);
     } else {
       console.error("Download error: ", error);

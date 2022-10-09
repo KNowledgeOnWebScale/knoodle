@@ -40,7 +40,7 @@ function Header(props) {
         position="fixed"
         sx={{
           bgcolor: "white",
-          borderBottom: 1,
+          borderBottom: -1,
           borderColor: "divider",
           zIndex: (theme) => theme.zIndex.drawer + 1,
         }}
