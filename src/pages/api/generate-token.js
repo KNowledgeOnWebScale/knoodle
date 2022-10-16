@@ -17,6 +17,7 @@ export default async function handler(request, response) {
   });
 
   const { id, secret } = await token_response.json();
+  console.log("my id: ", id, "my secret: ", secret);
 
   const result = await prisma.user.upsert({
     where: {

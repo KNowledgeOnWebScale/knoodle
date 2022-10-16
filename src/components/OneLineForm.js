@@ -1,53 +1,36 @@
 import * as React from "react";
-import Button from "@mui/material/Button";
+import Typography from "@mui/material/Typography";
+import Grid from "@mui/material/Grid";
 import TextField from "@mui/material/TextField";
 import Box from "@mui/material/Box";
-import Grid from "@mui/material/Grid";
+import Button from "@mui/material/Button";
 
 export default function OneLineForm({ id, label, trigger }) {
-  const handleSubmit = (event) => {
+  const handleSubmit = async (event) => {
     event.preventDefault();
     const data = new FormData(event.currentTarget);
     trigger(data.get(id));
-    console.log({
-      id: data.get(id),
-    });
   };
 
   return (
-    <Box
-      sx={{
-        mx: 4,
-        display: "flex",
-        flexDirection: "column",
-        alignItems: "center",
-      }}
-    >
-      <Box component="form" noValidate onSubmit={handleSubmit} sx={{ mt: 1 }}>
-        <Grid container spacing={4}>
-          <Grid item xs={9}>
+    <>
+      <Box component="form" onSubmit={handleSubmit}>
+        <Grid container spacing={3}>
+          <Grid item xs={12} md={12}>
             <TextField
-              margin="normal"
-              fullWidth
+              required
               id={id}
-              label={label}
               name={id}
-              autoComplete={id}
-              autoFocus
-            />
-          </Grid>
-          <Grid item xs={3}>
-            <Button
-              type="submit"
+              label={label}
               fullWidth
-              variant="contained"
-              sx={{ mt: 3, mb: 2 }}
-            >
-              Submit
+              variant="standard"
+            />
+            <Button type="submit" variant="contained" sx={{ mt: 3, mb: 2 }}>
+              Update
             </Button>
           </Grid>
         </Grid>
       </Box>
-    </Box>
+    </>
   );
 }
