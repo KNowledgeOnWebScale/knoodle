@@ -3,6 +3,7 @@ import Grid from "@mui/material/Grid";
 import Typography from "@mui/material/Typography";
 import TextField from "@mui/material/TextField";
 import Button from "@mui/material/Button";
+import CircularProgress from "@mui/material/CircularProgress";
 import Box from "@mui/material/Box";
 
 export default function SignUpForm({ trigger }) {
@@ -10,7 +11,6 @@ export default function SignUpForm({ trigger }) {
     event.preventDefault();
 
     const data = new FormData(event.currentTarget);
-    console.log(data.get("email"));
     let email = data.get("email");
     let password = data.get("password");
 
@@ -51,6 +51,9 @@ export default function SignUpForm({ trigger }) {
             <Button type="submit" variant="contained" sx={{ mt: 3, mb: 2 }}>
               Generate token
             </Button>
+            {/* <Box sx={{ display: "flex" }}>
+              <CircularProgress />
+            </Box> */}
           </Grid>
         </Grid>
       </Box>

@@ -14,20 +14,19 @@ import { createTheme, ThemeProvider } from "@mui/material/styles";
 import OneLineForm from "./OneLineForm";
 import Review from "./ConfigReview";
 import SignUpForm from "./SignUpForm";
+import { useSnackbar } from "notistack";
 
 const steps = ["Allow access", "Calendar .ics config", "Review"];
 
 const theme = createTheme();
 
-export default function Configuration({
-  setShowInvalidIcs,
-  setShowInvalidAccess,
-}) {
+export default function Configuration() {
   const [activeStep, setActiveStep] = useState(0);
   const { session } = useSession();
   const webID = session.info.webId;
   const solidFetch = session.fetch;
   const [issuer, setIssuer] = useState("");
+  const { enqueueSnackbar } = useSnackbar();
 
   useEffect(() => {
     async function getIssuer() {
@@ -53,7 +52,9 @@ export default function Configuration({
 
   const updateIcs = async (ics) => {
     if (!ics.endsWith(".ics")) {
-      setShowInvalidIcs(true);
+      enqueueSnackbar("Invalid .ics url (url should end with .ics)", {
+        variant: "error",
+      });
       return;
     }
     const response = await fetch("/api/update-ics", {
@@ -63,6 +64,10 @@ export default function Configuration({
         webid: webID,
       }),
     });
+
+    if (response.status == 200) {
+      enqueueSnackbar("Success!", { variant: "success" });
+    }
 
     const response_text = await response.json();
   };
@@ -81,8 +86,17 @@ export default function Configuration({
       }),
     });
 
-    const response_text = await response.json();
-    console.log(response_text);
+    if (response.status >= 400 && response.status < 600) {
+      enqueueSnackbar("Invalid login credentials", { variant: "error" });
+      return;
+    }
+
+    if (response.status == 200) {
+      enqueueSnackbar("Success!", { variant: "success" });
+    }
+
+    const response_json = await response.json();
+    console.log(response_json);
   };
 
   const updateAvailability = async () => {

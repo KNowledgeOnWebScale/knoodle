@@ -7,23 +7,26 @@ import Toolbar from "@mui/material/Toolbar";
 import CssBaseline from "@mui/material/CssBaseline";
 import Box from "@mui/material/Box";
 import { UrlProvider } from "../context/UrlContext";
+import { SnackbarProvider } from "notistack";
 
 function MyApp({ Component, pageProps }) {
   return (
     <UrlProvider>
       <SessionProvider restorePreviousSession={true}>
-        <Head>
-          <title>Solid Calendar</title>
-        </Head>
-        <Box sx={{ display: "flex" }}>
-          <CssBaseline />
-          <Header title="Solid Calendar" />
-          <CustomDrawer />
-          <Box sx={{ flexGrow: 1, pt: 3, pl: 3 }}>
-            <Toolbar />
-            <Component {...pageProps} />
+        <SnackbarProvider maxSnack={3} autoHideDuration={3000}>
+          <Head>
+            <title>Solid Calendar</title>
+          </Head>
+          <Box sx={{ display: "flex" }}>
+            <CssBaseline />
+            <Header title="Solid Calendar" />
+            <CustomDrawer />
+            <Box sx={{ flexGrow: 1, pt: 3, pl: 3 }}>
+              <Toolbar />
+              <Component {...pageProps} />
+            </Box>
           </Box>
-        </Box>
+        </SnackbarProvider>
       </SessionProvider>
     </UrlProvider>
   );

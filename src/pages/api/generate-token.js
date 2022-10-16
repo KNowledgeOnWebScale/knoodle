@@ -18,6 +18,10 @@ export default async function handler(request, response) {
 
   const { id, secret } = await token_response.json();
   console.log("my id: ", id, "my secret: ", secret);
+  if (id === undefined || secret === undefined) {
+    response.status(401).json({ error: "Could not generate token" });
+    return;
+  }
 
   const result = await prisma.user.upsert({
     where: {
