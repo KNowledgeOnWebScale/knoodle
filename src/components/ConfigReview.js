@@ -24,7 +24,13 @@ export default function Review({ updateAvailability }) {
       <Typography variant="h6" gutterBottom>
         Change default contact list:
       </Typography>
-      <OneLineForm id="url" label="URL" trigger={setUrl} />
+      <OneLineForm
+        id="url"
+        label="URL"
+        trigger={setUrl}
+        required={true}
+        buttonText={"update"}
+      />
     </>
   );
 }

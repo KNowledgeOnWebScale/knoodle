@@ -8,10 +8,14 @@ import Button from "@mui/material/Button";
 import Stack from "@mui/material/Stack";
 import CustomTimePicker from "./TimePicker";
 import CustomCalendar from "./CustomCalendar";
-import CustomAlert from "./Alert";
 import { intersect } from "../utils/dates";
-import { fetchContacts } from "../utils/participantsHelper";
+import {
+  fetchContacts,
+  fetchParticipantWebIdData,
+} from "../utils/participantsHelper";
 import { createAvailabilityEvents } from "../utils/calendarHelper";
+import OneLineForm from "./OneLineForm";
+import { useSnackbar } from "notistack";
 import {
   downloadSelectedAvailability,
   downloadSelectedVacation,
@@ -50,6 +54,7 @@ export default function Schedule() {
   const { session } = useSession();
   const solidFetch = session.fetch;
   const [contactUrl, setContactUrl] = useUrl();
+  const { enqueueSnackbar } = useSnackbar();
 
   const [validParticipants, setValidParticipants] = useState([]);
   const [invalidParticipants, setInvalidParticipants] = useState([]);
@@ -58,9 +63,6 @@ export default function Schedule() {
   const [vacationEvents, setVacationEvents] = useState([]);
   const [startTime, setStartTime] = useState(new Date());
   const [endTime, setEndTime] = useState(new Date());
-  const [showVacationAlert, setVacationAlert] = useState(false);
-  const [showNoContactAlert, setNoContactAlert] = useState(false);
-  const [showDownloadAlert, setDownloadAlert] = useState(false);
 
   const clickEvent = (e) => {
     let { start, end } = e;
@@ -85,16 +87,19 @@ export default function Schedule() {
 
   const showVacation = async () => {
     if (selectedParticipants.length == 0) {
-      setNoContactAlert(true);
+      enqueueSnackbar("Select a contact to check availability/holiday", {
+        variant: "info",
+      });
       return;
-    } else {
-      setNoContactAlert(false);
     }
     if (selectedParticipants.length != 1) {
-      setVacationAlert(true);
+      enqueueSnackbar(
+        "Choose exactly 1 contact to display their holiday days",
+        {
+          variant: "info",
+        }
+      );
       return;
-    } else {
-      setVacationAlert(false);
     }
 
     let error = await downloadSelectedVacation(
@@ -108,18 +113,19 @@ export default function Schedule() {
     if (!error) {
       days = participants[webid].vacationCalendar.data;
       createVacationEvents(days);
-      setDownloadAlert(false);
     } else {
-      setDownloadAlert(true);
+      enqueueSnackbar("Something went wrong when downloading contact data...", {
+        variant: "info",
+      });
     }
   };
 
   const showAvailability = async () => {
     if (selectedParticipants.length == 0) {
-      setNoContactAlert(true);
+      enqueueSnackbar("Select a contact to check availability/holiday", {
+        variant: "info",
+      });
       return;
-    } else {
-      setNoContactAlert(false);
     }
     let { calendars, error } = await downloadSelectedAvailability(
       selectedParticipants,
@@ -135,11 +141,37 @@ export default function Schedule() {
         slots = calendars[0];
       }
       createAvailabilityEvents(slots, setAvailableEvents, setVacationEvents);
-      setDownloadAlert(false);
     } else {
       console.error("Download error: ", error);
-      setDownloadAlert(true);
+      enqueueSnackbar("Something went wrong when downloading contact data...", {
+        variant: "info",
+      });
     }
+  };
+
+  const fetchFriend = async (webId) => {
+    participants[webId] = {};
+
+    await fetchParticipantWebIdData(participants, solidFetch, null, null);
+    let { calendars, error } = await downloadSelectedAvailability(
+      [webId],
+      participants,
+      solidFetch
+    );
+
+    if (error != undefined || calendars == null) {
+      enqueueSnackbar("Something went wrong when downloading contact data...", {
+        variant: "error",
+      });
+      return;
+    }
+
+    if (Object.keys(participants[webId]).length != 0) {
+      createAvailabilityEvents(calendars[0], setAvailableEvents, null);
+    }
+    enqueueSnackbar("Fetched friend calendar data!", {
+      variant: "success",
+    });
   };
 
   return (
@@ -148,24 +180,6 @@ export default function Schedule() {
         <Box height="100vh" width="100%" display="flex">
           <Grid container spacing={4}>
             <Grid item xs={9}>
-              <CustomAlert
-                severity="info"
-                message="Something went wrong when downloading contact data..."
-                showAlert={showDownloadAlert}
-                setAlert={setDownloadAlert}
-              />
-              <CustomAlert
-                severity="info"
-                message="Select a contact to check availability/holiday"
-                showAlert={showNoContactAlert}
-                setAlert={setNoContactAlert}
-              />
-              <CustomAlert
-                severity="info"
-                message="Choose exactly 1 contact to display their holiday days"
-                showAlert={showVacationAlert}
-                setAlert={setVacationAlert}
-              />
               <Stack
                 spacing={2}
                 direction="row"
@@ -190,6 +204,13 @@ export default function Schedule() {
                   Show vacation days
                 </Button>
               </Stack>
+              <OneLineForm
+                id="inputWebId"
+                label="Input webId of friend"
+                trigger={(webId) => fetchFriend(webId)}
+                required={false}
+                buttonText="Fetch"
+              />
               <Box sx={{ height: "60%" }}>
                 <CustomCalendar
                   availableEvents={availableEvents}

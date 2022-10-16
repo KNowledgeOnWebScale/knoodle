@@ -129,6 +129,8 @@ export default function Configuration() {
               id="secret"
               label="secret address in iCal format"
               trigger={updateIcs}
+              required={true}
+              buttonText={"Update"}
             />
           </>
         );
