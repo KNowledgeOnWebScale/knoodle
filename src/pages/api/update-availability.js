@@ -47,6 +47,22 @@ const updatePodAvailabilityPut = async (availabilityUrl, authFetch, rdf) => {
   });
 };
 
+const updatePodStorageSpace = async (webID, authFetch) => {
+  const storageLocation = webID.substring(0, webID.indexOf("profile") + 8);
+  const response = await authFetch(webID, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/sparql-update",
+    },
+    body: `
+    PREFIX space: <http://www.w3.org/ns/pim/space#>
+    INSERT DATA {
+      <#me> space:storage <${storageLocation}>.
+   }`,
+  });
+  console.log(response);
+};
+
 const updateWebIdAvailability = async (availabilityUrl, webID, authFetch) => {
   const response = await authFetch(webID, {
     method: "PATCH",
@@ -64,6 +80,8 @@ const updateWebIdAvailability = async (availabilityUrl, webID, authFetch) => {
 };
 
 const updateAvailability = async (webID, authFetch, rdf) => {
+  await updatePodStorageSpace(webID, authFetch);
+
   const mypods = await getPodUrlAll(webID, { fetch: authFetch });
   const SELECTED_POD = mypods[0];
   const availabilityUrl = `${SELECTED_POD}availability`;

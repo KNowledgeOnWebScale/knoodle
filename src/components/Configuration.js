@@ -27,6 +27,7 @@ export default function Configuration() {
   const solidFetch = session.fetch;
   const [issuer, setIssuer] = useState("");
   const { enqueueSnackbar } = useSnackbar();
+  const [configStatus, setConfigStatus] = useState({ user: false, ics: false });
 
   useEffect(() => {
     async function getIssuer() {
@@ -47,8 +48,20 @@ export default function Configuration() {
     }
     if (!issuer && session.info.isLoggedIn) {
       getIssuer();
+      getConfigState();
     }
   }, []);
+
+  const getConfigState = async () => {
+    const response = await fetch(
+      "/api/config-state?" + new URLSearchParams({ webid: webID }).toString()
+    );
+    const data = await response.json();
+    setConfigStatus(data);
+    if (data["user"] && data["ics"]) {
+      setActiveStep(2);
+    }
+  };
 
   const updateIcs = async (ics) => {
     if (!ics.endsWith(".ics")) {
@@ -67,6 +80,7 @@ export default function Configuration() {
 
     if (response.status == 200) {
       enqueueSnackbar("Success!", { variant: "success" });
+      setConfigStatus({ ...configStatus, ics: true });
     }
 
     const response_text = await response.json();
@@ -92,6 +106,7 @@ export default function Configuration() {
     }
 
     if (response.status == 200) {
+      setConfigStatus({ ...configStatus, user: true });
       enqueueSnackbar("Success!", { variant: "success" });
     }
 
@@ -108,7 +123,7 @@ export default function Configuration() {
       }),
     });
     const calendarData = await response.json();
-    console.log(calendarData);
+    //console.log(calendarData);
   };
 
   function getStepContent(step) {
@@ -135,7 +150,12 @@ export default function Configuration() {
           </>
         );
       case 2:
-        return <Review updateAvailability={updateAvailability} />;
+        return (
+          <Review
+            updateAvailability={updateAvailability}
+            configStatus={configStatus}
+          />
+        );
       default:
         throw new Error("Unknown step");
     }
@@ -183,14 +203,15 @@ export default function Configuration() {
                           Back
                         </Button>
                       )}
-
-                      <Button
-                        variant="contained"
-                        onClick={() => setActiveStep(activeStep + 1)}
-                        sx={{ mt: 3, ml: 1 }}
-                      >
-                        {activeStep === steps.length - 1 ? "Confirm" : "Next"}
-                      </Button>
+                      {activeStep !== steps.length - 1 && (
+                        <Button
+                          variant="contained"
+                          onClick={() => setActiveStep(activeStep + 1)}
+                          sx={{ mt: 3, ml: 1 }}
+                        >
+                          {"Next"}
+                        </Button>
+                      )}
                     </Box>
                   </>
                 )}
