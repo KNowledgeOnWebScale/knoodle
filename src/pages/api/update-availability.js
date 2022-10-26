@@ -12,6 +12,10 @@ import {
   getSolidDataset,
   getThingAll,
   removeThing,
+  createAcl,
+  setPublicDefaultAccess,
+  setPublicResourceAccess,
+  saveAclFor,
 } from "@inrupt/solid-client";
 
 export default async function handler(request, response) {
@@ -60,6 +64,7 @@ const updatePodStorageSpace = async (webID, authFetch) => {
       <#me> space:storage <${storageLocation}>.
    }`,
   });
+  console.log("Updating pod storage...");
   console.log(response);
 };
 
@@ -85,6 +90,7 @@ const updateAvailability = async (webID, authFetch, rdf) => {
   const mypods = await getPodUrlAll(webID, { fetch: authFetch });
   const SELECTED_POD = mypods[0];
   const availabilityUrl = `${SELECTED_POD}availability`;
+  console.log("My availability url: ");
   console.log(availabilityUrl);
 
   // Fetch or create a new availability calendar
@@ -111,6 +117,18 @@ const updateAvailability = async (webID, authFetch, rdf) => {
     }
   }
 
+  const READ_ACCESS = {
+    read: true,
+    write: false,
+    append: false,
+    control: false,
+  };
+
+  let calendarAcl = createAcl(myAvailabilityCalendar);
+  calendarAcl = setPublicDefaultAccess(calendarAcl, READ_ACCESS);
+  calendarAcl = setPublicResourceAccess(calendarAcl, READ_ACCESS);
+
+  await saveAclFor(myAvailabilityCalendar, calendarAcl, { fetch: authFetch });
   await updatePodAvailabilityPut(availabilityUrl, authFetch, rdf);
   await updateWebIdAvailability(availabilityUrl, webID, authFetch);
 };

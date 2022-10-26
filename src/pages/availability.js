@@ -18,15 +18,14 @@ export default function Availability() {
       participants[webId] = {};
 
       await fetchParticipantWebIdData(participants, solidFetch, null, null);
-      let { calendars } = await downloadSelectedAvailability(
-        [webId],
-        participants,
-        solidFetch
-      );
-
-      if (Object.keys(participants[webId]).length != 0) {
-        createAvailabilityEvents(calendars[0], setAvailableEvents, null);
-      }
+      downloadSelectedAvailability([webId], participants, solidFetch)
+        .then((ret) => {
+          let calendars = ret["calendars"];
+          createAvailabilityEvents(calendars[0], setAvailableEvents, null);
+        })
+        .catch((e) => {
+          console.log(e);
+        });
     }
     getAvailability();
   }, []);

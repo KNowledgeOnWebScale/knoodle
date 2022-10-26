@@ -108,7 +108,7 @@ export function getAvailableSlots(
   options
 ) {
   // Always consider a fixed range
-  const startDate = options?.startDate ?? nextDay(now, 0);
+  const startDate = options?.startDate ?? nextDay(now, -5);
   const endDate = options?.endDate ?? nextDay(startDate, 14);
 
   const slots =
