@@ -10,6 +10,11 @@ import Container from "@mui/material/Container";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Box from "@mui/material/Box";
+import { getRDFasJson } from "../utils/fetchHelper";
+import {
+  handleIncomingRedirect,
+  login,
+} from "@inrupt/solid-client-authn-browser";
 
 const providers = [
   { title: "Inrupt Pod Spaces", url: "https://broker.pod.inrupt.com/" },
@@ -23,6 +28,25 @@ const providers = [
 export default function Login() {
   const [currentUrl, setCurrentUrl] = useState("https://localhost:3000");
   const [provider, setProvider] = useState("");
+  const [inputWebId, setInputWebId] = useState("");
+
+  async function getProviderFromWebId(webId, fetch) {
+    // Get issuer
+    const frame = {
+      "@context": {
+        "@vocab": "http://xmlns.com/foaf/0.1/",
+        knows: "https://data.knows.idlab.ugent.be/person/office/#",
+        schema: "http://schema.org/",
+        solid: "http://www.w3.org/ns/solid/terms#",
+        "solid:oidcIssuer": { "@type": "@id" },
+      },
+      "@id": webId,
+    };
+
+    const result = await getRDFasJson(webId, frame, fetch);
+    const oidcIssuer = result["solid:oidcIssuer"];
+    return oidcIssuer;
+  }
 
   useEffect(() => {
     setCurrentUrl(window.location.origin);
@@ -43,8 +67,13 @@ export default function Login() {
         >
           Select your pod provider or input custom server
         </Typography>
-        <Stack spacing={2} direction="row" sx={{ mt: 2 }}>
-          <FormControl sx={{ minWidth: 200 }}>
+        <Stack
+          spacing={2}
+          direction="column"
+          alignItems="center"
+          sx={{ mt: 2 }}
+        >
+          {/* <FormControl sx={{ minWidth: 200 }}>
             <InputLabel id="demo-simple-select-label">
               Select pod provider
             </InputLabel>
@@ -66,15 +95,17 @@ export default function Login() {
           </FormControl>
           <Box display="flex" alignItems="center" justifyContent="center">
             or
-          </Box>
+          </Box> */}
           <TextField
             id="outlined-basic"
+            fullWidth
             label="Custom URL"
             variant="outlined"
             onChange={(event) => {
               setProvider(event.target.value);
             }}
           />
+
           <LoginButton
             authOptions={{ clientName: "solid calendar" }}
             oidcIssuer={provider}
@@ -85,6 +116,43 @@ export default function Login() {
               Log in
             </Button>
           </LoginButton>
+        </Stack>
+        <Box display="flex" alignItems="center" justifyContent="center">
+          or
+        </Box>
+        <Stack
+          spacing={2}
+          direction="column"
+          alignItems="center"
+          sx={{ mt: 2 }}
+        >
+          <TextField
+            id="outlined-basic"
+            label="Web ID"
+            fullWidth
+            variant="outlined"
+            onChange={async (event) => {
+              setInputWebId(event.target.value);
+            }}
+          />
+          <Button
+            sx={{ mt: 1 }}
+            variant="outlined"
+            onClick={async () => {
+              let prov = await getProviderFromWebId(inputWebId, fetch);
+              await handleIncomingRedirect({
+                url: currentUrl,
+                restorePreviousSession: true,
+              });
+              await login({
+                oidcIssuer: prov,
+                redirectUrl: currentUrl,
+                clientName: "KNoodle",
+              });
+            }}
+          >
+            Log in with Web ID
+          </Button>
         </Stack>
       </Container>
     </div>
