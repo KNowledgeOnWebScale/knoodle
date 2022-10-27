@@ -19,7 +19,7 @@ function MyApp({ Component, pageProps }) {
           </Head>
           <Box sx={{ display: "flex" }}>
             <CssBaseline />
-            <Header title="Solid Calendar" />
+            <Header title="KNoodle" />
             <CustomDrawer />
             <Box sx={{ flexGrow: 1, pt: 3, pl: 3 }}>
               <Toolbar />

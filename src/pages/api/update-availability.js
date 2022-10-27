@@ -16,6 +16,7 @@ import {
   setPublicDefaultAccess,
   setPublicResourceAccess,
   saveAclFor,
+  saveSolidDatasetAt,
 } from "@inrupt/solid-client";
 
 export default async function handler(request, response) {
@@ -117,6 +118,10 @@ const updateAvailability = async (webID, authFetch, rdf) => {
     }
   }
 
+  await saveSolidDatasetAt(availabilityUrl, myAvailabilityCalendar, {
+    fetch: authFetch,
+  });
+
   const READ_ACCESS = {
     read: true,
     write: false,
@@ -124,13 +129,14 @@ const updateAvailability = async (webID, authFetch, rdf) => {
     control: false,
   };
 
+  await updatePodAvailabilityPut(availabilityUrl, authFetch, rdf);
+  await updateWebIdAvailability(availabilityUrl, webID, authFetch);
+
   let calendarAcl = createAcl(myAvailabilityCalendar);
   calendarAcl = setPublicDefaultAccess(calendarAcl, READ_ACCESS);
   calendarAcl = setPublicResourceAccess(calendarAcl, READ_ACCESS);
 
   await saveAclFor(myAvailabilityCalendar, calendarAcl, { fetch: authFetch });
-  await updatePodAvailabilityPut(availabilityUrl, authFetch, rdf);
-  await updateWebIdAvailability(availabilityUrl, webID, authFetch);
 };
 
 const getAccessToken = async (id, secret, issuer) => {
