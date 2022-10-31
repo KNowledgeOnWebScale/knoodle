@@ -65,7 +65,7 @@ export default function Login() {
           noWrap
           sx={{ flex: 1 }}
         >
-          Select your pod provider or input custom server
+          Enter your pod provider URL
         </Typography>
         <Stack
           spacing={2}
@@ -99,7 +99,7 @@ export default function Login() {
           <TextField
             id="outlined-basic"
             fullWidth
-            label="Custom URL"
+            label="Pod Provider URL"
             variant="outlined"
             onChange={(event) => {
               setProvider(event.target.value);
@@ -112,13 +112,13 @@ export default function Login() {
             redirectUrl={currentUrl}
             onError={console.error}
           >
-            <Button sx={{ mt: 1 }} variant="outlined">
+            <Button sx={{ mt: 1, mb: 2 }} variant="outlined">
               Log in
             </Button>
           </LoginButton>
         </Stack>
         <Box display="flex" alignItems="center" justifyContent="center">
-          or
+          ... or enter your web ID
         </Box>
         <Stack
           spacing={2}
@@ -153,6 +153,15 @@ export default function Login() {
           >
             Log in with Web ID
           </Button>
+          <Typography
+            component="h2"
+            variant="body1"
+            color="inherit"
+            noWrap
+            sx={{ flex: 1 }}
+          >
+            [NOTE: Please use a CSS based provider!]
+          </Typography>
         </Stack>
       </Container>
     </div>

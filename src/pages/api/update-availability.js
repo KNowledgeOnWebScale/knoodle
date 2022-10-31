@@ -17,6 +17,11 @@ import {
   setPublicResourceAccess,
   saveAclFor,
   saveSolidDatasetAt,
+  hasResourceAcl,
+  getSolidDatasetWithAcl,
+  universalAccess,
+  setAgentDefaultAccess,
+  setAgentResourceAccess,
 } from "@inrupt/solid-client";
 
 export default async function handler(request, response) {
@@ -34,8 +39,12 @@ export default async function handler(request, response) {
     let authFetch = await getAccessToken(id, secret, issuer);
     const calendarRdf = await convertIcsToRdf(ics);
 
-    await updateAvailability(webid, authFetch, calendarRdf);
-    response.status(200).json(calendarRdf);
+    let success = await updateAvailability(webid, authFetch, calendarRdf);
+    if (success) {
+      response.status(200).json(calendarRdf);
+    } else {
+      response.status(400).json("");
+    }
   } else {
     console.log("Something wrong updating availability...");
     response.status(400);
@@ -65,8 +74,6 @@ const updatePodStorageSpace = async (webID, authFetch) => {
       <#me> space:storage <${storageLocation}>.
    }`,
   });
-  console.log("Updating pod storage...");
-  console.log(response);
 };
 
 const updateWebIdAvailability = async (availabilityUrl, webID, authFetch) => {
@@ -111,32 +118,75 @@ const updateAvailability = async (webID, authFetch, rdf) => {
   } catch (error) {
     if (typeof error.statusCode === "number" && error.statusCode === 404) {
       // if not found, create a new SolidDataset (i.e., the reading list)
-      console.log("Creating a dataset...");
+      console.log("Creating a solid dataset...");
       myAvailabilityCalendar = createSolidDataset();
     } else {
       console.error(error.message);
     }
   }
+  try {
+    console.log("Saving dataset...");
+    await saveSolidDatasetAt(availabilityUrl, myAvailabilityCalendar, {
+      fetch: authFetch,
+    });
 
-  await saveSolidDatasetAt(availabilityUrl, myAvailabilityCalendar, {
-    fetch: authFetch,
-  });
+    const READ_ACCESS = {
+      read: true,
+      write: false,
+      append: false,
+      control: false,
+    };
 
-  const READ_ACCESS = {
-    read: true,
-    write: false,
-    append: false,
-    control: false,
-  };
+    const FULL_ACCESS = {
+      read: true,
+      write: true,
+      append: true,
+      control: true,
+    };
+    console.log("Updating availability data...");
+    await updatePodAvailabilityPut(availabilityUrl, authFetch, rdf);
+    console.log("Updating Web ID URL...");
+    await updateWebIdAvailability(availabilityUrl, webID, authFetch);
 
-  await updatePodAvailabilityPut(availabilityUrl, authFetch, rdf);
-  await updateWebIdAvailability(availabilityUrl, webID, authFetch);
+    console.log("Fetching solid dataset with acl...");
+    const availabilityWithAcl = await getSolidDatasetWithAcl(availabilityUrl, {
+      fetch: authFetch,
+    });
 
-  let calendarAcl = createAcl(myAvailabilityCalendar);
-  calendarAcl = setPublicDefaultAccess(calendarAcl, READ_ACCESS);
-  calendarAcl = setPublicResourceAccess(calendarAcl, READ_ACCESS);
+    console.log("Setting up acl...");
+    if (!hasResourceAcl(availabilityWithAcl)) {
+      console.log("Creating acl...");
+      let calendarAcl = createAcl(availabilityWithAcl);
+      calendarAcl = setPublicDefaultAccess(calendarAcl, READ_ACCESS);
+      calendarAcl = setPublicResourceAccess(calendarAcl, READ_ACCESS);
 
-  await saveAclFor(myAvailabilityCalendar, calendarAcl, { fetch: authFetch });
+      // Set full access for the user itself
+      calendarAcl = setAgentDefaultAccess(calendarAcl, webID, FULL_ACCESS);
+      calendarAcl = setAgentResourceAccess(calendarAcl, webID, FULL_ACCESS);
+
+      await saveAclFor(availabilityWithAcl, calendarAcl, { fetch: authFetch });
+    } else {
+      console.log("Has acl already!");
+      universalAccess
+        .setPublicAccess(
+          availabilityUrl,
+          { read: true, write: false },
+          { fetch: authFetch }
+        )
+        .then((newAccess) => {
+          if (newAccess === null) {
+            console.log("Could not load access details for this Resource.");
+          } else {
+            console.log("Returned Public Access:: ", JSON.stringify(newAccess));
+          }
+        });
+    }
+    console.log("Finished creating/updating pod!");
+    return true;
+  } catch (error) {
+    console.log(error);
+    return false;
+  }
 };
 
 const getAccessToken = async (id, secret, issuer) => {

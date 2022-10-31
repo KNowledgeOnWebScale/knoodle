@@ -9,14 +9,15 @@
     "lint": "next lint"
   },
   "dependencies": {
-    "@emotion/react": "^11.10.0",
-    "@emotion/styled": "^11.10.0",
+    "@emotion/react": "^11.10.5",
+    "@emotion/styled": "^11.10.5",
     "@inrupt/solid-client": "^1.23.3",
     "@inrupt/solid-client-authn-browser": "^1.12.2",
     "@inrupt/solid-ui-react": "^2.8.0",
     "@inrupt/vocab-common-rdf": "^1.0.5",
     "@mui/icons-material": "^5.8.4",
-    "@mui/material": "^5.9.3",
+    "@mui/lab": "^5.0.0-alpha.105",
+    "@mui/material": "^5.10.11",
     "@mui/x-date-pickers": "^5.0.0-beta.7",
     "@prisma/client": "^4.3.1",
     "@solid/community-server": "^5.0.0",

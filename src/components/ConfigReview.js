@@ -3,9 +3,14 @@ import Typography from "@mui/material/Typography";
 import OneLineForm from "./OneLineForm";
 import { useUrl } from "../context/UrlContext";
 import Button from "@mui/material/Button";
+import LoadingButton from "@mui/lab/LoadingButton";
 import Box from "@mui/material/Box";
 
-export default function Review({ updateAvailability, configStatus }) {
+export default function Review({
+  updateAvailability,
+  configStatus,
+  revokeAccess,
+}) {
   const [url, setUrl] = useUrl();
 
   return (
@@ -61,17 +66,24 @@ export default function Review({ updateAvailability, configStatus }) {
         buttonText={"update"}
       />
       <Box sx={{ pt: 3 }} display="flex" flexDirection="column">
-        <Typography variant="subtitle1">
+        <Typography align="center" variant="subtitle1">
           Click this to revoke knoodle's access to your calendar. This will not
           delete any existing data.
         </Typography>
-        <Button variant="contained">Revoke knoodle access to calendar</Button>
-        <Typography sx={{ pt: 3 }} variant="subtitle1">
+        <Button sx={{ mt: 2 }} variant="contained" onClick={revokeAccess}>
+          Revoke knoodle access to calendar
+        </Button>
+        <Typography align="center" sx={{ pt: 3 }} variant="subtitle1">
           Click this to have knoodle generate your availability:
         </Typography>
-        <Button onClick={updateAvailability}>
+        <LoadingButton
+          sx={{ mt: 2 }}
+          variant="contained"
+          onClick={updateAvailability}
+          loading={configStatus.updating}
+        >
           Confirm & Generate availability
-        </Button>
+        </LoadingButton>
       </Box>
     </>
   );

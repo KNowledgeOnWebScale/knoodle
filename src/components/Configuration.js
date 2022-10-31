@@ -27,7 +27,11 @@ export default function Configuration() {
   const solidFetch = session.fetch;
   const [issuer, setIssuer] = useState("");
   const { enqueueSnackbar } = useSnackbar();
-  const [configStatus, setConfigStatus] = useState({ user: false, ics: false });
+  const [configStatus, setConfigStatus] = useState({
+    user: false,
+    ics: false,
+    updating: false,
+  });
 
   useEffect(() => {
     async function getIssuer() {
@@ -57,7 +61,7 @@ export default function Configuration() {
       "/api/config-state?" + new URLSearchParams({ webid: webID }).toString()
     );
     const data = await response.json();
-    setConfigStatus(data);
+    setConfigStatus({ ...configStatus, ...data });
     if (data["user"] && data["ics"]) {
       setActiveStep(2);
     }
@@ -81,6 +85,22 @@ export default function Configuration() {
     if (response.status == 200) {
       enqueueSnackbar("Success!", { variant: "success" });
       setConfigStatus({ ...configStatus, ics: true });
+    }
+
+    const response_text = await response.json();
+  };
+
+  const revokeAccess = async () => {
+    const response = await fetch("/api/revoke-access", {
+      method: "DELETE",
+      body: JSON.stringify({
+        webid: webID,
+      }),
+    });
+
+    if (response.status == 200) {
+      enqueueSnackbar("Success!", { variant: "success" });
+      setConfigStatus({ ...configStatus, ics: false, user: false });
     }
 
     const response_text = await response.json();
@@ -115,6 +135,7 @@ export default function Configuration() {
   };
 
   const updateAvailability = async () => {
+    setConfigStatus({ ...configStatus, updating: true });
     const response = await fetch("/api/update-availability", {
       method: "PUT",
       body: JSON.stringify({
@@ -122,8 +143,21 @@ export default function Configuration() {
         issuer: issuer,
       }),
     });
+    setConfigStatus({ ...configStatus, updating: false });
+    if (response.status >= 400 && response.status < 600) {
+      enqueueSnackbar("Failed to generate availability data", {
+        variant: "error",
+      });
+      return;
+    }
+
+    if (response.status == 200) {
+      setConfigStatus({ ...configStatus, user: true });
+      enqueueSnackbar("Success!", { variant: "success" });
+    }
+
     const calendarData = await response.json();
-    //console.log(calendarData);
+    console.log(calendarData);
   };
 
   function getStepContent(step) {
@@ -153,6 +187,7 @@ export default function Configuration() {
         return (
           <Review
             updateAvailability={updateAvailability}
+            revokeAccess={revokeAccess}
             configStatus={configStatus}
           />
         );
