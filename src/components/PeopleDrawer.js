@@ -16,6 +16,7 @@ function PeopleDrawer({
   invalidParticipants,
   selectedParticipants,
   setSelectedParticipants,
+  getFriends,
 }) {
   const [invalidToggle, setInvalidToggle] = useState(false);
 
@@ -31,14 +32,23 @@ function PeopleDrawer({
 
   return (
     <>
-      <Box m="auto">
+      <Box m="auto" align="center">
         <Button
           variant="outlined"
           onClick={() => {
             getContacts();
           }}
         >
-          Retrieve contacts
+          Retrieve contacts (hardcode)
+        </Button>
+        <Button
+          sx={{ mt: 1 }}
+          variant="outlined"
+          onClick={() => {
+            getFriends();
+          }}
+        >
+          Retrieve friends
         </Button>
       </Box>
       <Box sx={{ pl: 2 }}>

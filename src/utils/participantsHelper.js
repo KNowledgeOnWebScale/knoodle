@@ -54,7 +54,7 @@ export async function fetchParticipantWebIdData(
   for (let i = 0; i < webids.length; i++) {
     const id = webids[i];
 
-    if (id.startsWith("http")) {
+    if (id != "dummy1" || id != "dummy2") {
       try {
         const frame = {
           "@context": {

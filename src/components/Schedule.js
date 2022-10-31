@@ -14,12 +14,13 @@ import {
   fetchParticipantWebIdData,
 } from "../utils/participantsHelper";
 import { createAvailabilityEvents } from "../utils/calendarHelper";
-import OneLineForm from "./OneLineForm";
+import OneLineForm from "./ScheduleForm";
 import { useSnackbar } from "notistack";
 import {
   downloadSelectedAvailability,
   downloadSelectedVacation,
 } from "../utils/calendarHelper";
+import { getRDFasJson } from "../utils/fetchHelper";
 
 const participants = {
   dummy1: {
@@ -149,6 +150,28 @@ export default function Schedule() {
     }
   };
 
+  const addFriend = async (friendWebId, webID) => {
+    const response = await solidFetch(webID, {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/sparql-update",
+      },
+      body: `
+      PREFIX foaf: <http://xmlns.com/foaf/0.1/>
+      INSERT DATA {
+        <#me> foaf:knows "${friendWebId}".
+     }`,
+    });
+    if (response.status >= 200 && response.status <= 300) {
+      enqueueSnackbar("Success!", { variant: "success" });
+    } else {
+      enqueueSnackbar("Something went wrong when adding friend...", {
+        variant: "error",
+      });
+    }
+    console.log(response);
+  };
+
   const fetchFriend = async (webId) => {
     participants[webId] = {};
 
@@ -172,6 +195,41 @@ export default function Schedule() {
     enqueueSnackbar("Fetched friend calendar data!", {
       variant: "success",
     });
+  };
+
+  const fetchFriends = async () => {
+    participants = {};
+    setValidParticipants([]);
+    setInvalidParticipants([]);
+    const frame = {
+      "@context": {
+        knows: "http://xmlns.com/foaf/0.1/knows",
+      },
+      "@id": session.info.webId,
+    };
+
+    const result = await getRDFasJson(session.info.webId, frame, solidFetch);
+    let friendList = result["knows"];
+    if (friendList === undefined) {
+      return;
+    } else if (!Array.isArray(friendList)) {
+      friendList = [friendList];
+    }
+    console.log(friendList);
+    console.info("All participants' WebIDs fetched (without data).");
+
+    friendList.forEach((id) => {
+      participants[id] = {};
+    });
+
+    await fetchParticipantWebIdData(
+      participants,
+      solidFetch,
+      setValidParticipants,
+      setInvalidParticipants
+    );
+    console.log("All participants' WebIDs fetched (with data).");
+    console.log(participants);
   };
 
   return (
@@ -207,9 +265,12 @@ export default function Schedule() {
               <OneLineForm
                 id="inputWebId"
                 label="Input webId of friend"
-                trigger={(webId) => fetchFriend(webId)}
+                trigger={async (webId) => await fetchFriend(webId)}
                 required={false}
                 buttonText="Fetch"
+                addFriend={async (friendWebId) =>
+                  await addFriend(friendWebId, session.info.webId)
+                }
               />
               <Box sx={{ height: "60%" }}>
                 <CustomCalendar
@@ -239,6 +300,7 @@ export default function Schedule() {
                     contactUrl
                   );
                 }}
+                getFriends={fetchFriends}
                 validParticipants={validParticipants}
                 invalidParticipants={invalidParticipants}
                 selectedParticipants={selectedParticipants}
