@@ -8,27 +8,30 @@ import CssBaseline from "@mui/material/CssBaseline";
 import Box from "@mui/material/Box";
 import { UrlProvider } from "../context/UrlContext";
 import { SnackbarProvider } from "notistack";
+import { BaseUrlProvider } from "../context/BaseUrlContex";
 
 function MyApp({ Component, pageProps }) {
   return (
-    <UrlProvider>
-      <SessionProvider restorePreviousSession={true}>
-        <SnackbarProvider maxSnack={3} autoHideDuration={3000}>
-          <Head>
-            <title>Solid Calendar</title>
-          </Head>
-          <Box sx={{ display: "flex" }}>
-            <CssBaseline />
-            <Header title="KNoodle" />
-            <CustomDrawer />
-            <Box sx={{ flexGrow: 1, pt: 3, pl: 3 }}>
-              <Toolbar />
-              <Component {...pageProps} />
+    <BaseUrlProvider>
+      <UrlProvider>
+        <SessionProvider restorePreviousSession={true}>
+          <SnackbarProvider maxSnack={3} autoHideDuration={3000}>
+            <Head>
+              <title>Solid Calendar</title>
+            </Head>
+            <Box sx={{ display: "flex" }}>
+              <CssBaseline />
+              <Header title="KNoodle" />
+              <CustomDrawer />
+              <Box sx={{ flexGrow: 1, pt: 3, pl: 3 }}>
+                <Toolbar />
+                <Component {...pageProps} />
+              </Box>
             </Box>
-          </Box>
-        </SnackbarProvider>
-      </SessionProvider>
-    </UrlProvider>
+          </SnackbarProvider>
+        </SessionProvider>
+      </UrlProvider>
+    </BaseUrlProvider>
   );
 }
 

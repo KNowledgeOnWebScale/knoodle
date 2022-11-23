@@ -15,6 +15,7 @@ import {
   handleIncomingRedirect,
   login,
 } from "@inrupt/solid-client-authn-browser";
+import { useBaseUrl } from "../context/BaseUrlContex";
 
 const providers = [
   { title: "Inrupt Pod Spaces", url: "https://broker.pod.inrupt.com/" },
@@ -26,7 +27,7 @@ const providers = [
 ];
 
 export default function Login() {
-  const [currentUrl, setCurrentUrl] = useState("https://localhost:3000");
+  const [baseUrl, setBaseUrl] = useBaseUrl();
   const [provider, setProvider] = useState("");
   const [inputWebId, setInputWebId] = useState("");
 
@@ -47,10 +48,6 @@ export default function Login() {
     const oidcIssuer = result["solid:oidcIssuer"];
     return oidcIssuer;
   }
-
-  useEffect(() => {
-    setCurrentUrl(window.location.origin);
-  }, [setCurrentUrl]);
 
   return (
     <div>
@@ -109,7 +106,7 @@ export default function Login() {
           <LoginButton
             authOptions={{ clientName: "solid calendar" }}
             oidcIssuer={provider}
-            redirectUrl={currentUrl}
+            redirectUrl={baseUrl}
             onError={console.error}
           >
             <Button sx={{ mt: 1, mb: 2 }} variant="outlined">

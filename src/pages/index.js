@@ -3,10 +3,16 @@ import { useEffect, useState } from "react";
 import { useSession } from "@inrupt/solid-ui-react";
 import { getPersonName } from "../utils/participantsHelper";
 import { getRDFasJson } from "../utils/fetchHelper";
+import { useBaseUrl } from "../context/BaseUrlContex";
 
 export default function Home() {
   const { session, sessionRequestInProgress } = useSession();
   const [name, setName] = useState("");
+  const [baseUrl, setBaseUrl] = useBaseUrl();
+
+  useEffect(() => {
+    setBaseUrl(window.location.origin + window.location.pathname);
+  }, [setBaseUrl]);
 
   useEffect(() => {
     const webID = session.info.webId;
