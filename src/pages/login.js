@@ -10,6 +10,7 @@ import Container from "@mui/material/Container";
 import Stack from "@mui/material/Stack";
 import TextField from "@mui/material/TextField";
 import Box from "@mui/material/Box";
+import { useBaseUrl } from "../context/BaseUrlContex";
 
 const providers = [
   { title: "Inrupt Pod Spaces", url: "https://broker.pod.inrupt.com/" },
@@ -21,12 +22,8 @@ const providers = [
 ];
 
 export default function Login() {
-  const [currentUrl, setCurrentUrl] = useState("https://localhost:3000");
+  const [baseUrl, setBaseUrl] = useBaseUrl();
   const [provider, setProvider] = useState("");
-
-  useEffect(() => {
-    setCurrentUrl(window.location.origin);
-  }, [setCurrentUrl]);
 
   return (
     <div>
@@ -78,7 +75,7 @@ export default function Login() {
           <LoginButton
             authOptions={{ clientName: "solid calendar" }}
             oidcIssuer={provider}
-            redirectUrl={currentUrl}
+            redirectUrl={baseUrl}
             onError={console.error}
           >
             <Button sx={{ mt: 1 }} variant="outlined">
