@@ -209,11 +209,15 @@ export default function Schedule() {
     };
 
     const result = await getRDFasJson(session.info.webId, frame, solidFetch);
-    let friendList = result["knows"];
-    if (friendList === undefined) {
+    let friendListRaw = result["knows"];
+    if (friendListRaw === undefined) {
       return;
-    } else if (!Array.isArray(friendList)) {
-      friendList = [friendList];
+    } else if (!Array.isArray(friendListRaw)) {
+      friendListRaw = [friendListRaw];
+    }
+    let friendList = [];
+    for (let friendRaw of friendListRaw) {
+      friendList.push(friendRaw["@id"]);
     }
     console.log(friendList);
     console.info("All participants' WebIDs fetched (without data).");
