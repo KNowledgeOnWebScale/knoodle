@@ -128,6 +128,8 @@ export default function Schedule() {
       });
       return;
     }
+    selectedParticipants.push(session.info.webId);
+    await fetchMyself();
     let { calendars, error } = await downloadSelectedAvailability(
       selectedParticipants,
       participants,
@@ -170,6 +172,27 @@ export default function Schedule() {
       });
     }
     console.log(response);
+  };
+
+  const fetchMyself = async () => {
+    //TODO: This is a dirty hack by copying code. The original code is too coupled and hard to reuse directly. Needs refactor.
+    const webId = session.info.webId;
+    participants[webId] = {};
+
+    await fetchParticipantWebIdData(participants, solidFetch, null, null);
+    let { calendars, error } = await downloadSelectedAvailability(
+      [webId],
+      participants,
+      solidFetch
+    );
+
+    if (error != undefined || calendars == null) {
+      return;
+    }
+
+    if (Object.keys(participants[webId]).length != 0) {
+      createAvailabilityEvents(calendars[0], setAvailableEvents, null);
+    }
   };
 
   const fetchFriend = async (webId) => {
