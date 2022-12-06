@@ -64,7 +64,7 @@ export default function Home() {
           <>
             <h3>What is this app?</h3>
             <p>
-              KNoodle is KNoWS' Solid-based alternative to Doodle. It allows you
+              Solid Calendar (whose App is called KNoodle) is a Solid-based alternative to Doodle, by KNoWS (U.Ghent) and EWADA/HCAI (U.Oxford). It allows you
               to find time slots that work for different people, by using their
               availability calendar which is made available through a Solid pod.
             </p>
