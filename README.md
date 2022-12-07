@@ -7,7 +7,21 @@ This is a [Next.js](https://nextjs.org/) project bootstrapped with [`create-next
 
 ## Local development
 
-First, run the development server:
+You may need to initialise the application first, and then start the development server.
+
+### Install dependencies
+
+```
+npm i
+```
+
+### Initialisation
+
+```
+npx prisma generate
+```
+
+### Run development server
 
 ```bash
 npm run dev
