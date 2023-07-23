@@ -1,0 +1,3 @@
+[submodule "import/calendar-orchestrator"]
+	path = import/calendar-orchestrator
+	url = https://github.com/renyuneyun/calendar-orchestrator.git
